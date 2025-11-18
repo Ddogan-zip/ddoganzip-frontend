@@ -42,6 +42,44 @@ const theme = extendTheme({
       900: "#0d47a1",
     },
   },
+  styles: {
+    global: (props: any) => ({
+      body: {
+        bg: props.colorMode === "dark" ? "gray.900" : "gray.50",
+      },
+    }),
+  },
+  shadows: {
+    outline: "0 0 0 3px rgba(33, 150, 243, 0.6)",
+    brand: "0 0 20px rgba(33, 150, 243, 0.3)",
+    "brand-lg": "0 10px 40px rgba(33, 150, 243, 0.2)",
+  },
+  components: {
+    Button: {
+      variants: {
+        gradient: {
+          bgGradient: "linear(to-r, brand.400, brand.600)",
+          color: "white",
+          _hover: {
+            bgGradient: "linear(to-r, brand.500, brand.700)",
+            transform: "translateY(-2px)",
+            boxShadow: "brand-lg",
+          },
+          _active: {
+            transform: "translateY(0)",
+          },
+        },
+      },
+    },
+    Card: {
+      baseStyle: {
+        container: {
+          borderRadius: "xl",
+          overflow: "hidden",
+        },
+      },
+    },
+  },
 });
 
 function ColorModeToggle() {
@@ -55,7 +93,7 @@ function ColorModeToggle() {
 
 export function Layout() {
   const location = useLocation();
-  const bgColor = useColorModeValue("white", "gray.800");
+  const bgColor = useColorModeValue("rgba(255, 255, 255, 0.8)", "rgba(26, 32, 44, 0.8)");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
   const isActive = (path: string) => location.pathname === path;
@@ -65,12 +103,13 @@ export function Layout() {
       <Box
         as="nav"
         bg={bgColor}
+        backdropFilter="blur(10px)"
         borderBottom="1px"
         borderColor={borderColor}
         position="sticky"
         top={0}
         zIndex={10}
-        shadow="sm"
+        shadow="md"
       >
         <Container maxW="container.xl">
           <Flex h={16} alignItems="center" justifyContent="space-between">
@@ -79,58 +118,69 @@ export function Layout() {
                 as={RouterLink}
                 to="/"
                 fontSize="xl"
-                fontWeight="bold"
-                color="brand.500"
-                _hover={{ textDecoration: "none" }}
+                fontWeight="extrabold"
+                bgGradient="linear(to-r, brand.400, brand.600)"
+                bgClip="text"
+                _hover={{
+                  textDecoration: "none",
+                  transform: "scale(1.05)",
+                }}
+                transition="all 0.2s"
               >
-                똑간집 배달 서비스
+                🍽️ 똑간집
               </Link>
-              <HStack as="nav" spacing={4} display={{ base: "none", md: "flex" }}>
+              <HStack as="nav" spacing={2} display={{ base: "none", md: "flex" }}>
                 <Link
                   as={RouterLink}
                   to="/"
-                  px={3}
+                  px={4}
                   py={2}
-                  rounded="md"
+                  rounded="full"
                   fontWeight={isActive("/") ? "semibold" : "medium"}
-                  color={isActive("/") ? "brand.500" : undefined}
-                  bg={isActive("/") ? "brand.50" : undefined}
+                  color={isActive("/") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  bg={isActive("/") ? "brand.500" : "transparent"}
                   _hover={{
                     textDecoration: "none",
-                    bg: useColorModeValue("gray.100", "gray.700"),
+                    bg: isActive("/") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    transform: "translateY(-2px)",
                   }}
+                  transition="all 0.2s"
                 >
                   홈
                 </Link>
                 <Link
                   as={RouterLink}
                   to="/order"
-                  px={3}
+                  px={4}
                   py={2}
-                  rounded="md"
+                  rounded="full"
                   fontWeight={isActive("/order") ? "semibold" : "medium"}
-                  color={isActive("/order") ? "brand.500" : undefined}
-                  bg={isActive("/order") ? "brand.50" : undefined}
+                  color={isActive("/order") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  bg={isActive("/order") ? "brand.500" : "transparent"}
                   _hover={{
                     textDecoration: "none",
-                    bg: useColorModeValue("gray.100", "gray.700"),
+                    bg: isActive("/order") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    transform: "translateY(-2px)",
                   }}
+                  transition="all 0.2s"
                 >
                   메뉴 주문
                 </Link>
                 <Link
                   as={RouterLink}
                   to="/staff"
-                  px={3}
+                  px={4}
                   py={2}
-                  rounded="md"
+                  rounded="full"
                   fontWeight={isActive("/staff") ? "semibold" : "medium"}
-                  color={isActive("/staff") ? "brand.500" : undefined}
-                  bg={isActive("/staff") ? "brand.50" : undefined}
+                  color={isActive("/staff") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  bg={isActive("/staff") ? "brand.500" : "transparent"}
                   _hover={{
                     textDecoration: "none",
-                    bg: useColorModeValue("gray.100", "gray.700"),
+                    bg: isActive("/staff") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    transform: "translateY(-2px)",
                   }}
+                  transition="all 0.2s"
                 >
                   직원 대시보드
                 </Link>

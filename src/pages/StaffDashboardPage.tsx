@@ -86,13 +86,30 @@ export default function StaffDashboardPage() {
   return (
     <VStack spacing={8} align="stretch">
       {/* Header */}
-      <Box>
-        <Heading size="xl" mb={2}>
-          주문 대시보드
+      <Box
+        bgGradient={useColorModeValue(
+          "linear(to-r, orange.50, red.50)",
+          "linear(to-r, gray.800, gray.700)"
+        )}
+        p={8}
+        rounded="2xl"
+        shadow="xl"
+      >
+        <Heading
+          size="2xl"
+          mb={3}
+          bgGradient="linear(to-r, orange.500, red.500)"
+          bgClip="text"
+        >
+          👨‍💼 주문 대시보드
         </Heading>
         <HStack spacing={2} align="center">
-          <Icon as={FaClock} color="green.500" />
-          <Text color={useColorModeValue("gray.600", "gray.400")}>
+          <Icon as={FaClock} color="green.500" boxSize={5} />
+          <Text
+            color={useColorModeValue("gray.700", "gray.300")}
+            fontSize="lg"
+            fontWeight="medium"
+          >
             5초마다 자동으로 새로운 주문을 확인합니다
           </Text>
         </HStack>
@@ -100,35 +117,76 @@ export default function StaffDashboardPage() {
 
       {/* Stats */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-        <Card bg={cardBg} shadow="md">
+        <Card
+          bg={cardBg}
+          shadow="xl"
+          borderWidth="2px"
+          borderColor="orange.400"
+          rounded="2xl"
+          transition="all 0.3s"
+          _hover={{ shadow: "2xl", transform: "translateY(-4px)" }}
+        >
           <CardBody>
             <Stat>
-              <StatLabel>대기 중인 주문</StatLabel>
-              <StatNumber color="brand.500">
+              <StatLabel fontSize="md" fontWeight="medium">
+                🔔 대기 중인 주문
+              </StatLabel>
+              <StatNumber
+                fontSize="4xl"
+                fontWeight="black"
+                bgGradient="linear(to-r, orange.500, red.500)"
+                bgClip="text"
+              >
                 {pendingOrders?.length || 0}
               </StatNumber>
             </Stat>
           </CardBody>
         </Card>
-        <Card bg={cardBg} shadow="md">
+        <Card
+          bg={cardBg}
+          shadow="xl"
+          borderWidth="2px"
+          borderColor="green.400"
+          rounded="2xl"
+          transition="all 0.3s"
+          _hover={{ shadow: "2xl", transform: "translateY(-4px)" }}
+        >
           <CardBody>
             <Stat>
-              <StatLabel>자동 새로고침</StatLabel>
-              <StatNumber fontSize="xl">
-                <Badge colorScheme="green">활성</Badge>
+              <StatLabel fontSize="md" fontWeight="medium">
+                🔄 자동 새로고침
+              </StatLabel>
+              <StatNumber fontSize="2xl" mt={2}>
+                <Badge colorScheme="green" fontSize="lg" px={4} py={2} rounded="full">
+                  ● 활성
+                </Badge>
               </StatNumber>
             </Stat>
           </CardBody>
         </Card>
-        <Card bg={cardBg} shadow="md">
+        <Card
+          bg={cardBg}
+          shadow="xl"
+          borderWidth="2px"
+          borderColor={isPending ? "yellow.400" : "green.400"}
+          rounded="2xl"
+          transition="all 0.3s"
+          _hover={{ shadow: "2xl", transform: "translateY(-4px)" }}
+        >
           <CardBody>
             <Stat>
-              <StatLabel>상태</StatLabel>
-              <StatNumber fontSize="xl">
+              <StatLabel fontSize="md" fontWeight="medium">
+                📡 시스템 상태
+              </StatLabel>
+              <StatNumber fontSize="2xl" mt={2}>
                 {isPending ? (
-                  <Badge colorScheme="yellow">로딩 중</Badge>
+                  <Badge colorScheme="yellow" fontSize="lg" px={4} py={2} rounded="full">
+                    ⏳ 로딩 중
+                  </Badge>
                 ) : (
-                  <Badge colorScheme="green">온라인</Badge>
+                  <Badge colorScheme="green" fontSize="lg" px={4} py={2} rounded="full">
+                    ✓ 온라인
+                  </Badge>
                 )}
               </StatNumber>
             </Stat>
@@ -183,22 +241,50 @@ export default function StaffDashboardPage() {
           <Card
             key={order.id}
             bg={cardBg}
-            shadow="md"
-            borderWidth="1px"
-            borderColor={borderColor}
+            shadow="xl"
+            borderWidth="2px"
+            borderColor="yellow.400"
+            rounded="2xl"
             transition="all 0.3s"
-            _hover={{ shadow: "xl" }}
+            _hover={{ shadow: "2xl", transform: "translateY(-2px)" }}
+            position="relative"
+            overflow="hidden"
+            _before={{
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "6px",
+              bgGradient: "linear(to-r, yellow.400, orange.400)",
+            }}
           >
-            <CardHeader>
+            <CardHeader pt={8}>
               <HStack justify="space-between">
-                <VStack align="start" spacing={1}>
-                  <Heading size="md">주문 #{order.id}</Heading>
-                  <Text fontSize="sm" color={useColorModeValue("gray.600", "gray.400")}>
-                    {new Date(order.createdAt).toLocaleString("ko-KR")}
-                  </Text>
+                <VStack align="start" spacing={2}>
+                  <Heading
+                    size="lg"
+                    bgGradient="linear(to-r, orange.500, red.500)"
+                    bgClip="text"
+                  >
+                    🍽️ 주문 #{order.id}
+                  </Heading>
+                  <HStack>
+                    <Icon as={FaClock} color="gray.500" boxSize={4} />
+                    <Text fontSize="sm" color={useColorModeValue("gray.600", "gray.400")}>
+                      {new Date(order.createdAt).toLocaleString("ko-KR")}
+                    </Text>
+                  </HStack>
                 </VStack>
-                <Badge colorScheme="yellow" fontSize="md" px={3} py={1}>
-                  대기중
+                <Badge
+                  colorScheme="yellow"
+                  fontSize="md"
+                  px={4}
+                  py={2}
+                  rounded="full"
+                  fontWeight="bold"
+                >
+                  ⏳ 대기중
                 </Badge>
               </HStack>
             </CardHeader>
@@ -231,32 +317,55 @@ export default function StaffDashboardPage() {
 
             <Divider />
 
-            <CardFooter>
-              <HStack spacing={3} width="100%">
+            <CardFooter pt={6}>
+              <HStack spacing={4} width="100%">
                 <Button
                   leftIcon={<FaCheckCircle />}
-                  colorScheme="green"
+                  bgGradient="linear(to-r, green.400, green.600)"
+                  color="white"
                   flex={1}
                   size="lg"
+                  rounded="full"
                   onClick={() =>
                     changeOrderStatus({ orderId: order.id, status: "accepted" })
                   }
                   isDisabled={isUpdatingStatus}
+                  _hover={{
+                    bgGradient: "linear(to-r, green.500, green.700)",
+                    transform: "translateY(-2px)",
+                    shadow: "xl",
+                  }}
+                  _active={{
+                    transform: "translateY(0)",
+                  }}
+                  shadow="md"
                 >
-                  수락
+                  ✅ 수락
                 </Button>
                 <Button
                   leftIcon={<FaTimesCircle />}
-                  colorScheme="red"
                   variant="outline"
+                  borderColor="red.400"
+                  borderWidth="2px"
+                  color="red.500"
                   flex={1}
                   size="lg"
+                  rounded="full"
                   onClick={() =>
                     changeOrderStatus({ orderId: order.id, status: "rejected" })
                   }
                   isDisabled={isUpdatingStatus}
+                  _hover={{
+                    bg: useColorModeValue("red.50", "red.900"),
+                    borderColor: "red.500",
+                    transform: "translateY(-2px)",
+                    shadow: "xl",
+                  }}
+                  _active={{
+                    transform: "translateY(0)",
+                  }}
                 >
-                  거절
+                  ❌ 거절
                 </Button>
               </HStack>
             </CardFooter>
