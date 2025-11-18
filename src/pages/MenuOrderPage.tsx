@@ -215,11 +215,29 @@ export default function MenuOrderPage() {
   return (
     <VStack spacing={8} align="stretch">
       {/* Header */}
-      <Box>
-        <Heading as="h1" size="xl" mb={2}>
-          메뉴 주문
+      <Box
+        bgGradient={useColorModeValue(
+          "linear(to-r, brand.50, purple.50)",
+          "linear(to-r, gray.800, gray.700)"
+        )}
+        p={8}
+        rounded="2xl"
+        shadow="md"
+      >
+        <Heading
+          as="h1"
+          size="xl"
+          mb={2}
+          bgGradient="linear(to-r, brand.500, purple.500)"
+          bgClip="text"
+        >
+          🎤 메뉴 주문
         </Heading>
-        <Text color={useColorModeValue("gray.600", "gray.400")}>
+        <Text
+          color={useColorModeValue("gray.700", "gray.300")}
+          fontSize="lg"
+          fontWeight="medium"
+        >
           음성으로 간편하게 주문하거나, 메뉴를 직접 선택하세요
         </Text>
       </Box>
@@ -228,15 +246,30 @@ export default function MenuOrderPage() {
         {/* 왼쪽: 음성 인식 & 장바구니 */}
         <VStack spacing={6} align="stretch">
           {/* 음성 인식 섹션 */}
-          <Card bg={cardBg} shadow="lg" borderWidth="1px" borderColor={borderColor}>
-            <CardHeader>
+          <Card
+            bg={cardBg}
+            shadow="xl"
+            borderWidth="2px"
+            borderColor={listening ? "green.400" : borderColor}
+            rounded="2xl"
+            transition="all 0.3s"
+            _hover={{ shadow: "2xl" }}
+          >
+            <CardHeader bgGradient={listening ? "linear(to-r, green.50, green.100)" : undefined} roundedTop="2xl">
               <HStack justify="space-between">
-                <Heading size="md">음성 명령</Heading>
-                <Icon
-                  as={listening ? FaMicrophone : FaMicrophoneSlash}
-                  boxSize={6}
-                  color={listening ? "green.500" : "gray.400"}
-                />
+                <HStack>
+                  <Icon
+                    as={listening ? FaMicrophone : FaMicrophoneSlash}
+                    boxSize={6}
+                    color={listening ? "green.500" : "gray.400"}
+                  />
+                  <Heading size="md">음성 명령</Heading>
+                </HStack>
+                {listening && (
+                  <Badge colorScheme="green" fontSize="sm" px={3} py={1} rounded="full">
+                    ● LIVE
+                  </Badge>
+                )}
               </HStack>
             </CardHeader>
             <CardBody>
@@ -293,14 +326,31 @@ export default function MenuOrderPage() {
           </Card>
 
           {/* 장바구니 섹션 */}
-          <Card bg={cardBg} shadow="lg" borderWidth="1px" borderColor={borderColor}>
-            <CardHeader>
+          <Card
+            bg={cardBg}
+            shadow="xl"
+            borderWidth="2px"
+            borderColor={cart.length > 0 ? "brand.400" : borderColor}
+            rounded="2xl"
+            transition="all 0.3s"
+            _hover={{ shadow: "2xl" }}
+          >
+            <CardHeader
+              bgGradient={cart.length > 0 ? "linear(to-r, brand.50, purple.50)" : undefined}
+              roundedTop="2xl"
+            >
               <HStack justify="space-between">
                 <HStack>
-                  <Icon as={FaShoppingCart} color="brand.500" />
+                  <Icon as={FaShoppingCart} color="brand.500" boxSize={6} />
                   <Heading size="md">장바구니</Heading>
                 </HStack>
-                <Badge colorScheme="brand" fontSize="md" px={2} py={1}>
+                <Badge
+                  colorScheme={cart.length > 0 ? "brand" : "gray"}
+                  fontSize="md"
+                  px={3}
+                  py={1}
+                  rounded="full"
+                >
                   {cart.length}개
                 </Badge>
               </HStack>
@@ -403,62 +453,87 @@ export default function MenuOrderPage() {
             </VStack>
           ) : (
             <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
-              {menuItems?.map((item) => (
-                <Card
-                  key={item.id}
-                  bg={cardBg}
-                  shadow="md"
-                  borderWidth="1px"
-                  borderColor={borderColor}
-                  transition="all 0.3s"
-                  _hover={{
-                    shadow: "xl",
-                    transform: "translateY(-2px)",
-                  }}
-                  cursor="pointer"
-                  onClick={() => {
-                    const existing = cart.find((it) => it.id === item.id);
-                    if (existing) {
-                      updateQuantity(item.id, 1);
-                    } else {
-                      setCart((prev) => [...prev, { ...item, quantity: 1 }]);
+              {menuItems?.map((item) => {
+                const inCart = cart.find((it) => it.id === item.id);
+                return (
+                  <Card
+                    key={item.id}
+                    bg={cardBg}
+                    shadow="lg"
+                    borderWidth="2px"
+                    borderColor={inCart ? "green.400" : borderColor}
+                    rounded="2xl"
+                    transition="all 0.3s"
+                    _hover={{
+                      shadow: "2xl",
+                      transform: "translateY(-4px)",
+                      borderColor: "brand.400",
+                    }}
+                    cursor="pointer"
+                    onClick={() => {
+                      const existing = cart.find((it) => it.id === item.id);
+                      if (existing) {
+                        updateQuantity(item.id, 1);
+                      } else {
+                        setCart((prev) => [...prev, { ...item, quantity: 1 }]);
+                      }
+                      toast({
+                        title: "✅ 장바구니에 추가",
+                        description: `${item.name}이(가) 추가되었습니다.`,
+                        status: "success",
+                        duration: 1500,
+                        isClosable: true,
+                        position: "bottom-right",
+                      });
+                    }}
+                    position="relative"
+                    overflow="hidden"
+                    _before={
+                      inCart
+                        ? {
+                            content: '""',
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: "4px",
+                            bgGradient: "linear(to-r, green.400, green.600)",
+                          }
+                        : undefined
                     }
-                    toast({
-                      title: "장바구니에 추가",
-                      description: `${item.name}이(가) 추가되었습니다.`,
-                      status: "success",
-                      duration: 1500,
-                      isClosable: true,
-                      position: "bottom-right",
-                    });
-                  }}
-                >
-                  <CardBody>
-                    <HStack justify="space-between">
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="semibold" fontSize="lg">
-                          {item.name}
-                        </Text>
-                        <Badge colorScheme="brand">주문 가능</Badge>
-                      </VStack>
-                      <VStack align="end" spacing={1}>
-                        <Text
-                          fontSize="xl"
-                          fontWeight="bold"
-                          color="brand.500"
-                        >
-                          {item.price.toLocaleString()}원
-                        </Text>
-                        {cart.find((it) => it.id === item.id) && (
-                          <Badge colorScheme="green">
-                            장바구니에 {cart.find((it) => it.id === item.id)?.quantity}개
-                          </Badge>
-                        )}
-                      </VStack>
-                    </HStack>
-                  </CardBody>
-                </Card>
-              ))}
+                  >
+                    <CardBody p={6}>
+                      <HStack justify="space-between" align="start">
+                        <VStack align="start" spacing={2} flex={1}>
+                          <HStack>
+                            <Text fontWeight="bold" fontSize="xl">
+                              {item.name}
+                            </Text>
+                            <Badge colorScheme="green" rounded="full" px={2}>
+                              ✓ 주문 가능
+                            </Badge>
+                          </HStack>
+                          {inCart && (
+                            <Badge colorScheme="green" fontSize="sm" px={3} py={1} rounded="full">
+                              🛒 장바구니에 {inCart.quantity}개
+                            </Badge>
+                          )}
+                        </VStack>
+                        <VStack align="end" spacing={1}>
+                          <Text
+                            fontSize="2xl"
+                            fontWeight="black"
+                            bgGradient="linear(to-r, brand.500, purple.500)"
+                            bgClip="text"
+                          >
+                            {item.price.toLocaleString()}원
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </CardBody>
+                  </Card>
+                );
+              })}
             </SimpleGrid>
           )}
         </Box>
