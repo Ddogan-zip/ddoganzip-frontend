@@ -27,7 +27,7 @@ export const getMenuItems = async (): Promise<MenuItem[]> => {
   const dinnerMenuItems = await getMenuList();
   // DinnerMenuItem을 기존 MenuItem 형식으로 변환
   return dinnerMenuItems.map((item) => ({
-    id: item.id,
+    id: item.dinnerId,
     name: item.name,
     price: item.basePrice,
   }));

@@ -1,6 +1,12 @@
 import { apiClient } from "./client";
 import type { MenuItem } from "./menu";
-import type { CheckoutRequest, Order, OrderHistoryResponse } from "./types";
+import type {
+  CheckoutRequest,
+  CheckoutResponse,
+  Order,
+  OrderDetail,
+  OrderHistoryResponse,
+} from "./types";
 
 // 하위 호환성을 위해 기존 CartItem 타입 유지
 export interface CartItem extends MenuItem {
@@ -8,9 +14,12 @@ export interface CartItem extends MenuItem {
 }
 
 // 장바구니 상품을 주문으로 전환 (체크아웃)
-export const checkout = async (data: CheckoutRequest): Promise<Order> => {
-  const response = await apiClient.post<Order>("/api/orders/checkout", data);
-  return response.data;
+export const checkout = async (data: CheckoutRequest): Promise<number> => {
+  const response = await apiClient.post<CheckoutResponse>(
+    "/api/orders/checkout",
+    data
+  );
+  return response.data.data; // orderId 반환
 };
 
 // 현재 사용자의 주문 내역 조회
@@ -18,12 +27,12 @@ export const getOrderHistory = async (): Promise<Order[]> => {
   const response = await apiClient.get<OrderHistoryResponse>(
     "/api/orders/history"
   );
-  return response.data.orders;
+  return response.data; // 배열 직접 반환
 };
 
 // 특정 주문 상세 정보 조회
-export const getOrderDetails = async (orderId: number): Promise<Order> => {
-  const response = await apiClient.get<Order>(`/api/orders/${orderId}`);
+export const getOrderDetails = async (orderId: number): Promise<OrderDetail> => {
+  const response = await apiClient.get<OrderDetail>(`/api/orders/${orderId}`);
   return response.data;
 };
 
@@ -71,10 +80,10 @@ export const getPendingOrders = async (): Promise<LegacyOrder[]> => {
   return orders
     .filter((o) => o.status === "CHECKING_STOCK" || o.status === "RECEIVED")
     .map((o) => ({
-      id: o.id,
+      id: o.orderId,
       items: [], // 레거시 형식에 맞게 변환 필요
       status: "pending" as const,
-      createdAt: new Date(o.createdAt).getTime(),
+      createdAt: new Date(o.orderDate).getTime(),
     }));
 };
 
