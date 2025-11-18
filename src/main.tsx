@@ -3,22 +3,147 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import {
   createBrowserRouter,
-  Link,
+  Link as RouterLink,
   Outlet,
   RouterProvider,
+  useLocation,
 } from "react-router-dom";
+import {
+  ChakraProvider,
+  Box,
+  Container,
+  Flex,
+  Link,
+  Button,
+  HStack,
+  useColorMode,
+  useColorModeValue,
+  Icon,
+  extendTheme,
+} from "@chakra-ui/react";
+import { MoonIcon, SunIcon } from "@chakra-ui/icons";
+
+const theme = extendTheme({
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: false,
+  },
+  colors: {
+    brand: {
+      50: "#e3f2fd",
+      100: "#bbdefb",
+      200: "#90caf9",
+      300: "#64b5f6",
+      400: "#42a5f5",
+      500: "#2196f3",
+      600: "#1e88e5",
+      700: "#1976d2",
+      800: "#1565c0",
+      900: "#0d47a1",
+    },
+  },
+});
+
+function ColorModeToggle() {
+  const { colorMode, toggleColorMode } = useColorMode();
+  return (
+    <Button onClick={toggleColorMode} variant="ghost" size="sm">
+      {colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+    </Button>
+  );
+}
 
 export function Layout() {
+  const location = useLocation();
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <div style={{ padding: 24 }}>
-      <nav style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <Link to="/">Home</Link>
-        <Link to="/about">About</Link>
-        <Link to="/order">메뉴 주문 (회원)</Link>
-        <Link to="/staff">주문 대시보드 (직원)</Link>
-      </nav>
-      <Outlet />
-    </div>
+    <Box minH="100vh" bg={useColorModeValue("gray.50", "gray.900")}>
+      <Box
+        as="nav"
+        bg={bgColor}
+        borderBottom="1px"
+        borderColor={borderColor}
+        position="sticky"
+        top={0}
+        zIndex={10}
+        shadow="sm"
+      >
+        <Container maxW="container.xl">
+          <Flex h={16} alignItems="center" justifyContent="space-between">
+            <HStack spacing={8} alignItems="center">
+              <Link
+                as={RouterLink}
+                to="/"
+                fontSize="xl"
+                fontWeight="bold"
+                color="brand.500"
+                _hover={{ textDecoration: "none" }}
+              >
+                똑간집 배달 서비스
+              </Link>
+              <HStack as="nav" spacing={4} display={{ base: "none", md: "flex" }}>
+                <Link
+                  as={RouterLink}
+                  to="/"
+                  px={3}
+                  py={2}
+                  rounded="md"
+                  fontWeight={isActive("/") ? "semibold" : "medium"}
+                  color={isActive("/") ? "brand.500" : undefined}
+                  bg={isActive("/") ? "brand.50" : undefined}
+                  _hover={{
+                    textDecoration: "none",
+                    bg: useColorModeValue("gray.100", "gray.700"),
+                  }}
+                >
+                  홈
+                </Link>
+                <Link
+                  as={RouterLink}
+                  to="/order"
+                  px={3}
+                  py={2}
+                  rounded="md"
+                  fontWeight={isActive("/order") ? "semibold" : "medium"}
+                  color={isActive("/order") ? "brand.500" : undefined}
+                  bg={isActive("/order") ? "brand.50" : undefined}
+                  _hover={{
+                    textDecoration: "none",
+                    bg: useColorModeValue("gray.100", "gray.700"),
+                  }}
+                >
+                  메뉴 주문
+                </Link>
+                <Link
+                  as={RouterLink}
+                  to="/staff"
+                  px={3}
+                  py={2}
+                  rounded="md"
+                  fontWeight={isActive("/staff") ? "semibold" : "medium"}
+                  color={isActive("/staff") ? "brand.500" : undefined}
+                  bg={isActive("/staff") ? "brand.50" : undefined}
+                  _hover={{
+                    textDecoration: "none",
+                    bg: useColorModeValue("gray.100", "gray.700"),
+                  }}
+                >
+                  직원 대시보드
+                </Link>
+              </HStack>
+            </HStack>
+            <ColorModeToggle />
+          </Flex>
+        </Container>
+      </Box>
+      <Container maxW="container.xl" py={8}>
+        <Outlet />
+      </Container>
+    </Box>
   );
 }
 
@@ -70,8 +195,10 @@ const qc = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={qc}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <ChakraProvider theme={theme}>
+      <QueryClientProvider client={qc}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </ChakraProvider>
   </React.StrictMode>
 );
