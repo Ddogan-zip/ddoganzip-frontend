@@ -29,8 +29,8 @@ export default function RegisterPage() {
     email: "",
     password: "",
     name: "",
+    phoneNumber: "",
     address: "",
-    phone: "",
   });
   const { register, isLoading } = useAuth();
   const cardBg = useColorModeValue("white", "gray.800");
@@ -129,8 +129,25 @@ export default function RegisterPage() {
                   </InputGroup>
                 </FormControl>
 
-                <FormControl>
-                  <FormLabel>주소 (선택)</FormLabel>
+                <FormControl isRequired>
+                  <FormLabel>전화번호</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <Icon as={FaPhone} color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      placeholder="010-1234-5678"
+                      rounded="lg"
+                    />
+                  </InputGroup>
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel>주소</FormLabel>
                   <InputGroup>
                     <InputLeftElement pointerEvents="none">
                       <Icon as={FaHome} color="gray.400" />
@@ -141,23 +158,6 @@ export default function RegisterPage() {
                       value={formData.address}
                       onChange={handleChange}
                       placeholder="서울시 강남구..."
-                      rounded="lg"
-                    />
-                  </InputGroup>
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>전화번호 (선택)</FormLabel>
-                  <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                      <Icon as={FaPhone} color="gray.400" />
-                    </InputLeftElement>
-                    <Input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="010-1234-5678"
                       rounded="lg"
                     />
                   </InputGroup>

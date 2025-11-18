@@ -87,27 +87,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: RegisterRequest) => {
     try {
       setIsLoading(true);
-      const response: TokenResponse = await authApi.register(data);
-
-      // 토큰은 이미 auth.ts에서 저장됨
-      setUser({
-        email: data.email,
-        name: data.name,
-      });
+      // 회원가입 API 호출 (토큰을 반환하지 않음)
+      await authApi.register(data);
 
       toast({
         title: "회원가입 성공",
-        description: "환영합니다!",
+        description: "로그인 중입니다...",
         status: "success",
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
       });
 
-      navigate("/");
+      // 회원가입 후 자동 로그인
+      await login({
+        email: data.email,
+        password: data.password,
+      });
     } catch (error: any) {
       toast({
         title: "회원가입 실패",
-        description: error.response?.data?.error?.message || "회원가입에 실패했습니다.",
+        description: error.response?.data?.message || "회원가입에 실패했습니다.",
         status: "error",
         duration: 5000,
         isClosable: true,

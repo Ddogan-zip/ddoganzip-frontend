@@ -20,8 +20,8 @@ export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  address?: string;
-  phone?: string;
+  phoneNumber: string; // 필수
+  address: string; // 필수
 }
 
 export interface LoginRequest {
@@ -33,7 +33,6 @@ export interface TokenResponse {
   accessToken: string;
   refreshToken: string;
   tokenType: string;
-  expiresIn: number; // 밀리초
 }
 
 export interface RefreshRequest {
@@ -75,22 +74,38 @@ export interface DinnerDetail {
 }
 
 // ============= Cart Types =============
+export type CustomizationAction = "ADD" | "REMOVE" | "REPLACE";
+
+export interface Customization {
+  action: CustomizationAction;
+  dishId: number;
+  quantity: number;
+}
+
+export interface CustomizationResponse {
+  action: CustomizationAction;
+  dishName: string;
+  quantity: number;
+}
+
 export interface CartItemRequest {
   dinnerId: number;
   servingStyleId: number;
   quantity: number; // 1 이상
+  customizations?: Customization[]; // 선택 사항
 }
 
 export interface CartItem {
-  cartItemId: number;
+  itemId: number; // 백엔드는 itemId 사용
   dinnerId: number;
   dinnerName: string;
+  dinnerBasePrice: number; // 디너 기본 가격
   servingStyleId: number;
   servingStyleName: string;
-  quantity: number;
-  dinnerBasePrice: number; // 디너 기본 가격
   servingStylePrice: number; // 서빙 스타일 추가 가격
+  quantity: number;
   itemTotalPrice: number; // (디너 기본 + 서빙 추가) × 수량
+  customizations: CustomizationResponse[]; // 커스터마이징 목록
 }
 
 export interface CartResponse {
@@ -105,19 +120,26 @@ export interface UpdateQuantityRequest {
 
 export interface UpdateOptionsRequest {
   servingStyleId: number;
+  customizations?: Customization[]; // 기존 커스터마이징은 모두 교체됨
+}
+
+export interface CustomizeItemRequest {
+  action: CustomizationAction;
+  dishId: number;
+  quantity: number;
 }
 
 // ============= Order Types =============
 export type OrderStatus =
-  | "CHECKING_STOCK"
-  | "RECEIVED"
-  | "IN_KITCHEN"
+  | "PENDING"
+  | "PREPARING"
   | "DELIVERING"
-  | "DELIVERED";
+  | "COMPLETED"
+  | "CANCELLED";
 
 export interface CheckoutRequest {
   deliveryAddress: string;
-  deliveryDate: string; // ISO 8601 format: "2025-11-19T12:00:00"
+  paymentMethod: string; // 결제 수단
 }
 
 export interface CheckoutResponse {
@@ -127,23 +149,29 @@ export interface CheckoutResponse {
 }
 
 export interface OrderItem {
-  orderItemId: number;
+  itemId: number; // 주문 아이템 ID
   dinnerName: string;
   servingStyleName: string;
   quantity: number;
   price: number; // 아이템 총 가격
+  customizations: CustomizationResponse[]; // 커스터마이징 목록
 }
 
 export interface Order {
   orderId: number;
-  orderDate: string; // ISO 8601
-  deliveryDate: string;
-  deliveryAddress: string;
+  orderDate: string; // ISO 8601 (LocalDateTime)
   status: OrderStatus;
   totalPrice: number;
+  itemCount: number; // 주문 아이템 개수
 }
 
-export interface OrderDetail extends Order {
+export interface OrderDetail {
+  orderId: number;
+  orderDate: string; // ISO 8601
+  status: OrderStatus;
+  deliveryAddress: string;
+  paymentMethod: string;
+  totalPrice: number;
   items: OrderItem[];
 }
 
@@ -158,11 +186,12 @@ export interface UpdateOrderStatusRequest {
 export interface ActiveOrder {
   orderId: number;
   customerName: string;
+  customerPhone: string; // 고객 전화번호
   deliveryAddress: string;
-  deliveryDate: string;
+  orderDate: string; // ISO 8601 (LocalDateTime)
   status: OrderStatus;
   totalPrice: number;
-  orderDate: string;
+  itemCount: number; // 주문 아이템 개수
 }
 
 // 진행 중인 주문은 ActiveOrder 배열로 직접 반환
