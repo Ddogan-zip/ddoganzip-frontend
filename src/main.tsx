@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import {
-  createBrowserRouter,
+  BrowserRouter,
+  Routes,
+  Route,
   Link as RouterLink,
   Outlet,
-  RouterProvider,
   useLocation,
 } from "react-router-dom";
 import {
@@ -20,8 +21,17 @@ import {
   useColorModeValue,
   Icon,
   extendTheme,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Avatar,
+  Text,
 } from "@chakra-ui/react";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { FaUser, FaSignOutAlt } from "react-icons/fa";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const theme = extendTheme({
   config: {
@@ -93,6 +103,7 @@ function ColorModeToggle() {
 
 export function Layout() {
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
   const bgColor = useColorModeValue("rgba(255, 255, 255, 0.8)", "rgba(26, 32, 44, 0.8)");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
@@ -148,45 +159,102 @@ export function Layout() {
                 >
                   홈
                 </Link>
-                <Link
-                  as={RouterLink}
-                  to="/order"
-                  px={4}
-                  py={2}
-                  rounded="full"
-                  fontWeight={isActive("/order") ? "semibold" : "medium"}
-                  color={isActive("/order") ? "white" : useColorModeValue("gray.700", "gray.200")}
-                  bg={isActive("/order") ? "brand.500" : "transparent"}
-                  _hover={{
-                    textDecoration: "none",
-                    bg: isActive("/order") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
-                    transform: "translateY(-2px)",
-                  }}
-                  transition="all 0.2s"
-                >
-                  메뉴 주문
-                </Link>
-                <Link
-                  as={RouterLink}
-                  to="/staff"
-                  px={4}
-                  py={2}
-                  rounded="full"
-                  fontWeight={isActive("/staff") ? "semibold" : "medium"}
-                  color={isActive("/staff") ? "white" : useColorModeValue("gray.700", "gray.200")}
-                  bg={isActive("/staff") ? "brand.500" : "transparent"}
-                  _hover={{
-                    textDecoration: "none",
-                    bg: isActive("/staff") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
-                    transform: "translateY(-2px)",
-                  }}
-                  transition="all 0.2s"
-                >
-                  직원 대시보드
-                </Link>
+                {isAuthenticated && (
+                  <>
+                    <Link
+                      as={RouterLink}
+                      to="/order"
+                      px={4}
+                      py={2}
+                      rounded="full"
+                      fontWeight={isActive("/order") ? "semibold" : "medium"}
+                      color={isActive("/order") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                      bg={isActive("/order") ? "brand.500" : "transparent"}
+                      _hover={{
+                        textDecoration: "none",
+                        bg: isActive("/order") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                        transform: "translateY(-2px)",
+                      }}
+                      transition="all 0.2s"
+                    >
+                      메뉴 주문
+                    </Link>
+                    <Link
+                      as={RouterLink}
+                      to="/staff"
+                      px={4}
+                      py={2}
+                      rounded="full"
+                      fontWeight={isActive("/staff") ? "semibold" : "medium"}
+                      color={isActive("/staff") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                      bg={isActive("/staff") ? "brand.500" : "transparent"}
+                      _hover={{
+                        textDecoration: "none",
+                        bg: isActive("/staff") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                        transform: "translateY(-2px)",
+                      }}
+                      transition="all 0.2s"
+                    >
+                      직원 대시보드
+                    </Link>
+                  </>
+                )}
               </HStack>
             </HStack>
-            <ColorModeToggle />
+            <HStack spacing={3}>
+              <ColorModeToggle />
+              {isAuthenticated ? (
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    variant="ghost"
+                    rounded="full"
+                    cursor="pointer"
+                    minW={0}
+                  >
+                    <HStack spacing={2}>
+                      <Avatar size="sm" name={user?.name} bg="brand.500" />
+                      <Text display={{ base: "none", md: "block" }} fontSize="sm">
+                        {user?.name}
+                      </Text>
+                    </HStack>
+                  </MenuButton>
+                  <MenuList>
+                    <MenuItem icon={<Icon as={FaUser} />} isDisabled>
+                      {user?.email}
+                    </MenuItem>
+                    <MenuItem icon={<Icon as={FaSignOutAlt} />} onClick={logout}>
+                      로그아웃
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              ) : (
+                <HStack spacing={2}>
+                  <Button
+                    as={RouterLink}
+                    to="/login"
+                    variant="ghost"
+                    size="sm"
+                    rounded="full"
+                  >
+                    로그인
+                  </Button>
+                  <Button
+                    as={RouterLink}
+                    to="/register"
+                    size="sm"
+                    bgGradient="linear(to-r, brand.400, brand.600)"
+                    color="white"
+                    rounded="full"
+                    _hover={{
+                      bgGradient: "linear(to-r, brand.500, brand.700)",
+                    }}
+                  >
+                    회원가입
+                  </Button>
+                </HStack>
+              )}
+            </HStack>
           </Flex>
         </Container>
       </Box>
@@ -197,58 +265,95 @@ export function Layout() {
   );
 }
 
-const router = createBrowserRouter([
-  {
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        lazy: async () => ({
-          Component: (await import("./pages/Home")).default,
-        }),
-      },
-      {
-        path: "about",
-        lazy: async () => ({
-          Component: (await import("./pages/About")).default,
-        }),
-      },
-      {
-        path: "order",
-        lazy: async () => ({
-          Component: (await import("./pages/MenuOrderPage")).default,
-        }),
-      },
-      {
-        path: "staff",
-        lazy: async () => ({
-          Component: (await import("./pages/StaffDashboardPage")).default,
-        }),
-      },
-      {
-        path: "todos",
-        lazy: async () => ({
-          Component: (await import("./pages/Todos")).default,
-        }),
-      },
-      {
-        path: "*",
-        lazy: async () => ({
-          Component: () => <div>Not Found</div>,
-        }),
-      },
-    ],
-  },
-]);
+// Lazy load pages
+const Home = React.lazy(() => import("./pages/Home"));
+const LoginPage = React.lazy(() => import("./pages/LoginPage"));
+const RegisterPage = React.lazy(() => import("./pages/RegisterPage"));
+const About = React.lazy(() => import("./pages/About"));
+const MenuOrderPage = React.lazy(() => import("./pages/MenuOrderPage"));
+const StaffDashboardPage = React.lazy(() => import("./pages/StaffDashboardPage"));
+const Todos = React.lazy(() => import("./pages/Todos"));
 
 const qc = new QueryClient();
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ChakraProvider theme={theme}>
-      <QueryClientProvider client={qc}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </ChakraProvider>
-  </React.StrictMode>
-);
+function Root() {
+  return (
+    <React.StrictMode>
+      <ChakraProvider theme={theme}>
+        <QueryClientProvider client={qc}>
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route
+                    index
+                    element={
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <Home />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="login"
+                    element={
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <LoginPage />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="register"
+                    element={
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <RegisterPage />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="about"
+                    element={
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <About />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="order"
+                    element={
+                      <ProtectedRoute>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                          <MenuOrderPage />
+                        </React.Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="staff"
+                    element={
+                      <ProtectedRoute>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                          <StaffDashboardPage />
+                        </React.Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="todos"
+                    element={
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <Todos />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route path="*" element={<div>Not Found</div>} />
+                </Route>
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ChakraProvider>
+    </React.StrictMode>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<Root />);
