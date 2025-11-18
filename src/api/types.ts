@@ -1,12 +1,27 @@
-// 공통 타입 정의
+// 공통 타입 정의 - 백엔드 API 명세에 맞춤
+
+// ============= Common Response Types =============
+export interface SuccessResponse<T = any> {
+  success: true;
+  message: string;
+  data?: T;
+}
+
+export interface ErrorResponse {
+  error: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+}
 
 // ============= Auth Types =============
 export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  address: string;
-  phone: string;
+  address?: string;
+  phone?: string;
 }
 
 export interface LoginRequest {
@@ -18,7 +33,7 @@ export interface TokenResponse {
   accessToken: string;
   refreshToken: string;
   tokenType: string;
-  expiresIn: number;
+  expiresIn: number; // 밀리초
 }
 
 export interface RefreshRequest {
@@ -27,78 +42,69 @@ export interface RefreshRequest {
 
 // ============= Menu Types =============
 export interface Dish {
-  id: number;
+  dishId: number;
   name: string;
-  description?: string;
+  description: string;
   basePrice: number;
+  defaultQuantity: number;
 }
 
 export interface ServingStyle {
-  id: number;
-  name: string;
+  styleId: number;
+  name: string; // "Simple", "Grand", "Deluxe"
   additionalPrice: number;
-  description?: string;
+  description: string;
 }
 
 export interface DinnerMenuItem {
-  id: number;
+  dinnerId: number;
   name: string;
-  description?: string;
+  description: string;
   basePrice: number;
-  imageUrl?: string;
+  imageUrl: string;
 }
 
 export interface DinnerDetail {
-  id: number;
+  dinnerId: number;
   name: string;
-  description?: string;
+  description: string;
+  basePrice: number;
+  imageUrl: string;
   dishes: Dish[];
   availableStyles: ServingStyle[];
-  basePrice: number;
-  imageUrl?: string;
 }
 
 // ============= Cart Types =============
-export type CustomizationAction = "ADD" | "REMOVE" | "REPLACE";
-
-export interface Customization {
-  action: CustomizationAction;
-  dishId: number;
-  quantity: number;
-}
-
 export interface CartItemRequest {
   dinnerId: number;
   servingStyleId: number;
-  quantity: number;
-  customizations?: Customization[];
+  quantity: number; // 1 이상
 }
 
 export interface CartItem {
-  id: number;
+  cartItemId: number;
   dinnerId: number;
   dinnerName: string;
   servingStyleId: number;
   servingStyleName: string;
   quantity: number;
-  customizations: Customization[];
-  unitPrice: number;
-  totalPrice: number;
+  dinnerBasePrice: number; // 디너 기본 가격
+  servingStylePrice: number; // 서빙 스타일 추가 가격
+  itemTotalPrice: number; // (디너 기본 + 서빙 추가) × 수량
 }
 
 export interface CartResponse {
   cartId: number;
   items: CartItem[];
-  totalPrice: number;
+  totalPrice: number; // 전체 합계
 }
 
 export interface UpdateQuantityRequest {
-  quantity: number;
+  quantity: number; // 1 이상
 }
 
 export interface UpdateOptionsRequest {
   servingStyleId: number;
-  customizations?: Customization[];
 }
 
 // ============= Order Types =============
@@ -111,41 +117,53 @@ export type OrderStatus =
 
 export interface CheckoutRequest {
   deliveryAddress: string;
-  deliveryDate: string; // ISO 8601 format
+  deliveryDate: string; // ISO 8601 format: "2025-11-19T12:00:00"
+}
+
+export interface CheckoutResponse {
+  success: true;
+  message: string;
+  data: number; // orderId
 }
 
 export interface OrderItem {
-  dinnerId: number;
+  orderItemId: number;
   dinnerName: string;
-  servingStyleId: number;
   servingStyleName: string;
   quantity: number;
-  customizations: Customization[];
-  unitPrice: number;
-  totalPrice: number;
+  price: number; // 아이템 총 가격
 }
 
 export interface Order {
-  id: number;
-  userId: number;
-  items: OrderItem[];
-  status: OrderStatus;
-  deliveryAddress: string;
+  orderId: number;
+  orderDate: string; // ISO 8601
   deliveryDate: string;
+  deliveryAddress: string;
+  status: OrderStatus;
   totalPrice: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface OrderHistoryResponse {
-  orders: Order[];
+export interface OrderDetail extends Order {
+  items: OrderItem[];
 }
+
+// 주문 내역은 Order 배열로 직접 반환
+export type OrderHistoryResponse = Order[];
 
 // ============= Staff Types =============
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
 }
 
-export interface ActiveOrdersResponse {
-  orders: Order[];
+export interface ActiveOrder {
+  orderId: number;
+  customerName: string;
+  deliveryAddress: string;
+  deliveryDate: string;
+  status: OrderStatus;
+  totalPrice: number;
+  orderDate: string;
 }
+
+// 진행 중인 주문은 ActiveOrder 배열로 직접 반환
+export type ActiveOrdersResponse = ActiveOrder[];
