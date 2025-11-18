@@ -24,7 +24,24 @@ import {
   AlertTitle,
   AlertDescription,
   useToast,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  useColorModeValue,
+  Icon,
+  Badge,
+  SimpleGrid,
+  IconButton,
 } from "@chakra-ui/react";
+import {
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaShoppingCart,
+  FaTrash,
+  FaPlus,
+  FaMinus,
+} from "react-icons/fa";
 
 export default function MenuOrderPage() {
   // 타입 명시하면 menuItems도 자동으로 MenuItem[]로 추론됨
@@ -171,123 +188,281 @@ export default function MenuOrderPage() {
     );
   }
 
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
+  const removeFromCart = (itemId: number) => {
+    setCart((prev) => prev.filter((item) => item.id !== itemId));
+  };
+
+  const updateQuantity = (itemId: number, delta: number) => {
+    setCart((prev) =>
+      prev
+        .map((item) =>
+          item.id === itemId
+            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const totalPrice = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
   return (
-    <Box p={8}>
-      <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="xl">
-          메뉴 주문 (회원용)
+    <VStack spacing={8} align="stretch">
+      {/* Header */}
+      <Box>
+        <Heading as="h1" size="xl" mb={2}>
+          메뉴 주문
         </Heading>
+        <Text color={useColorModeValue("gray.600", "gray.400")}>
+          음성으로 간편하게 주문하거나, 메뉴를 직접 선택하세요
+        </Text>
+      </Box>
 
-        {/* 음성 인식 섹션 */}
-        <Box p={5} shadow="md" borderWidth="1px" borderRadius="md">
-          <Heading size="lg" mb={4}>
-            음성 명령
-          </Heading>
-          <Text>
-            마이크: {listening ? "켜짐 (말씀하세요...)" : "꺼짐"}
-          </Text>
-          <Text mt={2}>음성 인식 텍스트: {transcript}</Text>
-          {isProcessing && <Spinner mt={2} />}
-          {voiceResult && (
-            <Alert status="info" mt={4} variant="subtle">
-              <AlertIcon />
-              <Box>
-                <AlertTitle>분석 결과:</AlertTitle>
-                <AlertDescription>{voiceResult.reply}</AlertDescription>
-              </Box>
-            </Alert>
-          )}
-        </Box>
-
-        {/* 장바구니 섹션 */}
-        <Box p={5} shadow="md" borderWidth="1px" borderRadius="md">
-          <Heading size="lg" mb={4}>
-            장바구니
-          </Heading>
-          {cart.length === 0 ? (
-            <Text>장바구니가 비어있습니다.</Text>
-          ) : (
-            <List spacing={3} mb={4}>
-              {cart.map((item) => (
-                <ListItem
-                  key={item.id}
-                  display="flex"
-                  justifyContent="space-between"
+      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
+        {/* 왼쪽: 음성 인식 & 장바구니 */}
+        <VStack spacing={6} align="stretch">
+          {/* 음성 인식 섹션 */}
+          <Card bg={cardBg} shadow="lg" borderWidth="1px" borderColor={borderColor}>
+            <CardHeader>
+              <HStack justify="space-between">
+                <Heading size="md">음성 명령</Heading>
+                <Icon
+                  as={listening ? FaMicrophone : FaMicrophoneSlash}
+                  boxSize={6}
+                  color={listening ? "green.500" : "gray.400"}
+                />
+              </HStack>
+            </CardHeader>
+            <CardBody>
+              <VStack align="stretch" spacing={4}>
+                <HStack
+                  p={3}
+                  bg={
+                    listening
+                      ? useColorModeValue("green.50", "green.900")
+                      : useColorModeValue("gray.100", "gray.700")
+                  }
+                  rounded="md"
+                  justify="space-between"
                 >
-                  <Text>
-                    {item.name} x {item.quantity}
+                  <Text fontWeight="medium">마이크 상태:</Text>
+                  <Badge colorScheme={listening ? "green" : "gray"}>
+                    {listening ? "켜짐 (말씀하세요...)" : "꺼짐"}
+                  </Badge>
+                </HStack>
+
+                {transcript && (
+                  <Box
+                    p={4}
+                    bg={useColorModeValue("blue.50", "blue.900")}
+                    rounded="md"
+                  >
+                    <Text fontSize="sm" color="gray.600" mb={1}>
+                      음성 인식 텍스트:
+                    </Text>
+                    <Text fontWeight="medium">{transcript}</Text>
+                  </Box>
+                )}
+
+                {isProcessing && (
+                  <HStack justify="center" p={4}>
+                    <Spinner color="brand.500" />
+                    <Text>처리 중...</Text>
+                  </HStack>
+                )}
+
+                {voiceResult && (
+                  <Alert status="info" variant="subtle" rounded="md">
+                    <AlertIcon />
+                    <Box>
+                      <AlertTitle fontSize="sm">분석 결과</AlertTitle>
+                      <AlertDescription fontSize="sm">
+                        {voiceResult.reply}
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                )}
+              </VStack>
+            </CardBody>
+          </Card>
+
+          {/* 장바구니 섹션 */}
+          <Card bg={cardBg} shadow="lg" borderWidth="1px" borderColor={borderColor}>
+            <CardHeader>
+              <HStack justify="space-between">
+                <HStack>
+                  <Icon as={FaShoppingCart} color="brand.500" />
+                  <Heading size="md">장바구니</Heading>
+                </HStack>
+                <Badge colorScheme="brand" fontSize="md" px={2} py={1}>
+                  {cart.length}개
+                </Badge>
+              </HStack>
+            </CardHeader>
+            <CardBody>
+              {cart.length === 0 ? (
+                <VStack py={8} spacing={3}>
+                  <Icon
+                    as={FaShoppingCart}
+                    boxSize={12}
+                    color="gray.300"
+                  />
+                  <Text color={useColorModeValue("gray.600", "gray.400")}>
+                    장바구니가 비어있습니다
                   </Text>
-                  <Text fontWeight="bold">
-                    {(item.price * item.quantity).toLocaleString()}원
-                  </Text>
-                </ListItem>
-              ))}
-              <Divider my={2} />
-              <ListItem
-                display="flex"
-                justifyContent="space-between"
+                </VStack>
+              ) : (
+                <VStack spacing={3} align="stretch">
+                  {cart.map((item) => (
+                    <Box
+                      key={item.id}
+                      p={3}
+                      bg={useColorModeValue("gray.50", "gray.700")}
+                      rounded="md"
+                    >
+                      <HStack justify="space-between" mb={2}>
+                        <Text fontWeight="medium">{item.name}</Text>
+                        <IconButton
+                          aria-label="Remove item"
+                          icon={<FaTrash />}
+                          size="sm"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={() => removeFromCart(item.id)}
+                        />
+                      </HStack>
+                      <HStack justify="space-between">
+                        <HStack>
+                          <IconButton
+                            aria-label="Decrease quantity"
+                            icon={<FaMinus />}
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, -1)}
+                          />
+                          <Text fontWeight="medium" minW="30px" textAlign="center">
+                            {item.quantity}
+                          </Text>
+                          <IconButton
+                            aria-label="Increase quantity"
+                            icon={<FaPlus />}
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, 1)}
+                          />
+                        </HStack>
+                        <Text fontWeight="bold" color="brand.500">
+                          {(item.price * item.quantity).toLocaleString()}원
+                        </Text>
+                      </HStack>
+                    </Box>
+                  ))}
+                  <Divider />
+                  <HStack justify="space-between" p={2}>
+                    <Text fontSize="lg" fontWeight="bold">
+                      총 금액:
+                    </Text>
+                    <Text fontSize="xl" fontWeight="bold" color="green.500">
+                      {totalPrice.toLocaleString()}원
+                    </Text>
+                  </HStack>
+                </VStack>
+              )}
+            </CardBody>
+            <CardFooter>
+              <Button
+                leftIcon={<FaShoppingCart />}
+                colorScheme="green"
+                size="lg"
+                width="100%"
+                onClick={() => submitOrder(cart)}
+                isLoading={isPlacingOrder}
+                isDisabled={isPlacingOrder || cart.length === 0}
               >
-                <Text fontWeight="bold" fontSize="lg">
-                  총 금액:
-                </Text>
-                <Text
-                  fontWeight="bold"
-                  fontSize="lg"
-                  color="green.500"
-                >
-                  {cart
-                    .reduce(
-                      (total, item) =>
-                        total + item.price * item.quantity,
-                      0
-                    )
-                    .toLocaleString()}
-                  원
-                </Text>
-              </ListItem>
-            </List>
-          )}
-          <Button
-            colorScheme="green"
-            size="lg"
-            width="100%"
-            onClick={() => submitOrder(cart)}
-            isLoading={isPlacingOrder}
-            disabled={isPlacingOrder || cart.length === 0} // ✅
-          >
-            {isPlacingOrder ? "주문 처리 중..." : "주문하기"}
-          </Button>
-        </Box>
+                {isPlacingOrder ? "주문 처리 중..." : "주문하기"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </VStack>
 
-        {/* 메뉴 목록 섹션 */}
+        {/* 오른쪽: 메뉴 목록 */}
         <Box>
-          <Heading size="lg" mb={4}>
+          <Heading size="md" mb={4}>
             메뉴 목록
           </Heading>
           {isMenuLoading ? (
-            <Spinner />
+            <VStack py={12}>
+              <Spinner size="xl" color="brand.500" thickness="4px" />
+              <Text color={useColorModeValue("gray.600", "gray.400")}>
+                메뉴를 불러오는 중...
+              </Text>
+            </VStack>
           ) : (
-            <List spacing={3}>
+            <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
               {menuItems?.map((item) => (
-                <ListItem
+                <Card
                   key={item.id}
-                  p={3}
-                  shadow="sm"
+                  bg={cardBg}
+                  shadow="md"
                   borderWidth="1px"
-                  borderRadius="md"
+                  borderColor={borderColor}
+                  transition="all 0.3s"
+                  _hover={{
+                    shadow: "xl",
+                    transform: "translateY(-2px)",
+                  }}
+                  cursor="pointer"
+                  onClick={() => {
+                    const existing = cart.find((it) => it.id === item.id);
+                    if (existing) {
+                      updateQuantity(item.id, 1);
+                    } else {
+                      setCart((prev) => [...prev, { ...item, quantity: 1 }]);
+                    }
+                    toast({
+                      title: "장바구니에 추가",
+                      description: `${item.name}이(가) 추가되었습니다.`,
+                      status: "success",
+                      duration: 1500,
+                      isClosable: true,
+                      position: "bottom-right",
+                    });
+                  }}
                 >
-                  <HStack justifyContent="space-between">
-                    <Text fontWeight="medium">{item.name}</Text>
-                    <Text color="gray.600">
-                      {item.price.toLocaleString()}원
-                    </Text>
-                  </HStack>
-                </ListItem>
+                  <CardBody>
+                    <HStack justify="space-between">
+                      <VStack align="start" spacing={1}>
+                        <Text fontWeight="semibold" fontSize="lg">
+                          {item.name}
+                        </Text>
+                        <Badge colorScheme="brand">주문 가능</Badge>
+                      </VStack>
+                      <VStack align="end" spacing={1}>
+                        <Text
+                          fontSize="xl"
+                          fontWeight="bold"
+                          color="brand.500"
+                        >
+                          {item.price.toLocaleString()}원
+                        </Text>
+                        {cart.find((it) => it.id === item.id) && (
+                          <Badge colorScheme="green">
+                            장바구니에 {cart.find((it) => it.id === item.id)?.quantity}개
+                          </Badge>
+                        )}
+                      </VStack>
+                    </HStack>
+                  </CardBody>
+                </Card>
               ))}
-            </List>
+            </SimpleGrid>
           )}
         </Box>
-      </VStack>
-    </Box>
+      </SimpleGrid>
+    </VStack>
   );
 }
