@@ -1,21 +1,34 @@
-// MenuItem은 메뉴 아이템 '하나'의 타입
+import { apiClient } from "./client";
+import type { DinnerMenuItem, DinnerDetail } from "./types";
+
+// 하위 호환성을 위해 기존 MenuItem 타입 유지
 export interface MenuItem {
   id: number;
   name: string;
   price: number;
 }
 
-// 배열이므로 MenuItem[] 로 지정
-const FAKE_MENU_ITEMS: MenuItem[] = [
-  { id: 1, name: "페퍼로니 피자", price: 25000 },
-  { id: 2, name: "치즈 피자", price: 22000 },
-  { id: 3, name: "불고기 피자", price: 28000 },
-  { id: 4, name: "콜라", price: 2000 },
-  { id: 5, name: "사이다", price: 2000 },
-];
+// 모든 디너 메뉴 목록 조회
+export const getMenuList = async (): Promise<DinnerMenuItem[]> => {
+  const response = await apiClient.get<DinnerMenuItem[]>("/api/menu/list");
+  return response.data;
+};
 
-// 반환도 배열이므로 Promise<MenuItem[]>
+// 특정 디너 메뉴 상세 정보 조회
+export const getMenuDetails = async (dinnerId: number): Promise<DinnerDetail> => {
+  const response = await apiClient.get<DinnerDetail>(
+    `/api/menu/details/${dinnerId}`
+  );
+  return response.data;
+};
+
+// 하위 호환성을 위해 기존 함수 유지 (getMenuList를 래핑)
 export const getMenuItems = async (): Promise<MenuItem[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return FAKE_MENU_ITEMS;
+  const dinnerMenuItems = await getMenuList();
+  // DinnerMenuItem을 기존 MenuItem 형식으로 변환
+  return dinnerMenuItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    price: item.basePrice,
+  }));
 };
