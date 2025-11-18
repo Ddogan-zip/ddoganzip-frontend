@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
-import { getMenuItems } from "../api/menu";
-import type { CartItem } from "../api/orders";
-import { placeOrder } from "../api/orders";
+import { getMenuList } from "../api/menu";
+import type { DinnerMenuItem } from "../api/types";
 import type { VoiceCommand } from "../api/voice";
 import { processVoiceCommand } from "../api/voice";
 import {
@@ -43,42 +42,55 @@ import {
   FaMinus,
 } from "react-icons/fa";
 
+// 장바구니 아이템 타입 (DinnerMenuItem + quantity)
+interface CartItemLocal extends DinnerMenuItem {
+  quantity: number;
+  selectedStyleId?: number; // 추후 서빙 스타일 선택 기능용
+}
+
 export default function MenuOrderPage() {
-  // 타입 명시하면 menuItems도 자동으로 MenuItem[]로 추론됨
+  // 실제 백엔드 API 사용 (DinnerMenuItem 반환)
   const { data: menuItems, isPending: isMenuLoading } = useQuery({
     queryKey: ["menu-items"],
-    queryFn: getMenuItems,
+    queryFn: getMenuList,
   });
 
-  // ✅ 장바구니는 배열 + 초기값 []
-  const [cart, setCart] = useState<CartItem[]>([]);
-  // ✅ 음성 결과 상태
+  // 장바구니는 배열 + 초기값 []
+  const [cart, setCart] = useState<CartItemLocal[]>([]);
+  // 음성 결과 상태
   const [voiceResult, setVoiceResult] = useState<VoiceCommand | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const toast = useToast();
 
-  const { mutate: submitOrder, isPending: isPlacingOrder } = useMutation({
-    mutationFn: placeOrder,
-    onSuccess: () => {
+  // 주문하기 기능 (추후 실제 checkout API 연동)
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
       toast({
-        title: "주문 완료",
-        description: "주문이 성공적으로 접수되었습니다.",
-        status: "success",
+        title: "장바구니 비어있음",
+        description: "장바구니가 비어있어 주문할 수 없습니다.",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
-      setCart([]); // ✅ 장바구니 비우기
-    },
-    onError: (error) => {
-      toast({
-        title: "주문 실패",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    },
-  });
+      return;
+    }
+
+    // TODO: 실제 checkout API 호출
+    // const orderId = await checkout({
+    //   deliveryAddress: "...",
+    //   paymentMethod: "CREDIT_CARD"
+    // });
+
+    toast({
+      title: "주문 완료",
+      description: `${cart.length}개 아이템이 주문되었습니다.`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+
+    setCart([]); // 장바구니 비우기
+  };
 
   const {
     transcript,
@@ -126,11 +138,11 @@ export default function MenuOrderPage() {
           if (targetItem) {
             setCart((prevCart) => {
               const existing = prevCart.find(
-                (it) => it.id === targetItem.id
+                (it) => it.dinnerId === targetItem.dinnerId
               );
               if (existing) {
                 return prevCart.map((it) =>
-                  it.id === targetItem.id
+                  it.dinnerId === targetItem.dinnerId
                     ? { ...it, quantity: it.quantity + quantity }
                     : it
                 );
@@ -150,17 +162,7 @@ export default function MenuOrderPage() {
 
         // 결제 명령 처리
         if (result.action === "checkout") {
-          if (cart.length > 0) {
-            submitOrder(cart);
-          } else {
-            toast({
-              title: "장바구니 비어있음",
-              description: "장바구니가 비어있어 결제할 수 없습니다.",
-              status: "info",
-              duration: 3000,
-              isClosable: true,
-            });
-          }
+          handleCheckout();
         }
       } finally {
         if (!cancelled) setIsProcessing(false);
@@ -171,9 +173,7 @@ export default function MenuOrderPage() {
     return () => {
       cancelled = true;
     };
-  }, [finalTranscript, menuItems, cart, submitOrder, toast, resetTranscript]);
-  // 여기 deps는 eslint 기준 맞추려면 이렇게, 
-  // 사실 cart는 빼고 finalTranscript, menuItems 정도만 두는 것도 가능함(로직에 따라 조정)
+  }, [finalTranscript, menuItems, toast, resetTranscript]);
 
   if (!browserSupportsSpeechRecognition) {
     return (
@@ -191,15 +191,15 @@ export default function MenuOrderPage() {
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  const removeFromCart = (itemId: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== itemId));
+  const removeFromCart = (dinnerId: number) => {
+    setCart((prev) => prev.filter((item) => item.dinnerId !== dinnerId));
   };
 
-  const updateQuantity = (itemId: number, delta: number) => {
+  const updateQuantity = (dinnerId: number, delta: number) => {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.id === itemId
+          item.dinnerId === dinnerId
             ? { ...item, quantity: Math.max(1, item.quantity + delta) }
             : item
         )
@@ -208,7 +208,7 @@ export default function MenuOrderPage() {
   };
 
   const totalPrice = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) => total + item.basePrice * item.quantity,
     0
   );
 
@@ -371,7 +371,7 @@ export default function MenuOrderPage() {
                 <VStack spacing={3} align="stretch">
                   {cart.map((item) => (
                     <Box
-                      key={item.id}
+                      key={item.dinnerId}
                       p={3}
                       bg={useColorModeValue("gray.50", "gray.700")}
                       rounded="md"
@@ -384,7 +384,7 @@ export default function MenuOrderPage() {
                           size="sm"
                           colorScheme="red"
                           variant="ghost"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.dinnerId)}
                         />
                       </HStack>
                       <HStack justify="space-between">
@@ -393,7 +393,7 @@ export default function MenuOrderPage() {
                             aria-label="Decrease quantity"
                             icon={<FaMinus />}
                             size="sm"
-                            onClick={() => updateQuantity(item.id, -1)}
+                            onClick={() => updateQuantity(item.dinnerId, -1)}
                           />
                           <Text fontWeight="medium" minW="30px" textAlign="center">
                             {item.quantity}
@@ -402,11 +402,11 @@ export default function MenuOrderPage() {
                             aria-label="Increase quantity"
                             icon={<FaPlus />}
                             size="sm"
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(item.dinnerId, 1)}
                           />
                         </HStack>
                         <Text fontWeight="bold" color="brand.500">
-                          {(item.price * item.quantity).toLocaleString()}원
+                          {(item.basePrice * item.quantity).toLocaleString()}원
                         </Text>
                       </HStack>
                     </Box>
@@ -426,14 +426,19 @@ export default function MenuOrderPage() {
             <CardFooter>
               <Button
                 leftIcon={<FaShoppingCart />}
-                colorScheme="green"
+                bgGradient="linear(to-r, green.400, green.600)"
+                color="white"
                 size="lg"
                 width="100%"
-                onClick={() => submitOrder(cart)}
-                isLoading={isPlacingOrder}
-                isDisabled={isPlacingOrder || cart.length === 0}
+                onClick={handleCheckout}
+                isDisabled={cart.length === 0}
+                _hover={{
+                  bgGradient: "linear(to-r, green.500, green.700)",
+                  transform: "translateY(-2px)",
+                  shadow: "lg",
+                }}
               >
-                {isPlacingOrder ? "주문 처리 중..." : "주문하기"}
+                주문하기
               </Button>
             </CardFooter>
           </Card>
@@ -454,10 +459,10 @@ export default function MenuOrderPage() {
           ) : (
             <SimpleGrid columns={{ base: 1, md: 1 }} spacing={4}>
               {menuItems?.map((item) => {
-                const inCart = cart.find((it) => it.id === item.id);
+                const inCart = cart.find((it) => it.dinnerId === item.dinnerId);
                 return (
                   <Card
-                    key={item.id}
+                    key={item.dinnerId}
                     bg={cardBg}
                     shadow="lg"
                     borderWidth="2px"
@@ -471,9 +476,9 @@ export default function MenuOrderPage() {
                     }}
                     cursor="pointer"
                     onClick={() => {
-                      const existing = cart.find((it) => it.id === item.id);
+                      const existing = cart.find((it) => it.dinnerId === item.dinnerId);
                       if (existing) {
-                        updateQuantity(item.id, 1);
+                        updateQuantity(item.dinnerId, 1);
                       } else {
                         setCart((prev) => [...prev, { ...item, quantity: 1 }]);
                       }
@@ -513,6 +518,9 @@ export default function MenuOrderPage() {
                               ✓ 주문 가능
                             </Badge>
                           </HStack>
+                          <Text color="gray.500" fontSize="sm">
+                            {item.description}
+                          </Text>
                           {inCart && (
                             <Badge colorScheme="green" fontSize="sm" px={3} py={1} rounded="full">
                               🛒 장바구니에 {inCart.quantity}개
@@ -526,7 +534,7 @@ export default function MenuOrderPage() {
                             bgGradient="linear(to-r, brand.500, purple.500)"
                             bgClip="text"
                           >
-                            {item.price.toLocaleString()}원
+                            {item.basePrice.toLocaleString()}원
                           </Text>
                         </VStack>
                       </HStack>
