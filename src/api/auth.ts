@@ -4,51 +4,52 @@ import type {
   LoginRequest,
   TokenResponse,
   RefreshRequest,
+  SuccessResponse,
 } from "./types";
 
 // 회원가입
-export const register = async (
-  data: RegisterRequest
-): Promise<TokenResponse> => {
-  const response = await apiClient.post<TokenResponse>(
+export const register = async (data: RegisterRequest): Promise<void> => {
+  const response = await apiClient.post<SuccessResponse<null>>(
     "/api/auth/register",
     data
   );
-
-  // 토큰 저장
-  tokenStorage.setAccessToken(response.data.accessToken);
-  tokenStorage.setRefreshToken(response.data.refreshToken);
-
-  return response.data;
+  // 회원가입은 토큰을 반환하지 않음. 별도로 로그인 필요
 };
 
 // 로그인
 export const login = async (data: LoginRequest): Promise<TokenResponse> => {
-  const response = await apiClient.post<TokenResponse>("/api/auth/login", data);
+  const response = await apiClient.post<SuccessResponse<TokenResponse>>(
+    "/api/auth/login",
+    data
+  );
 
-  // 토큰 저장
-  tokenStorage.setAccessToken(response.data.accessToken);
-  tokenStorage.setRefreshToken(response.data.refreshToken);
+  // 토큰 저장 (data 필드 안에 있음)
+  if (response.data.data) {
+    tokenStorage.setAccessToken(response.data.data.accessToken);
+    tokenStorage.setRefreshToken(response.data.data.refreshToken);
+    return response.data.data;
+  }
 
-  return response.data;
+  throw new Error("Login failed: no token received");
 };
 
 // 토큰 갱신
 export const refreshToken = async (
   data: RefreshRequest
 ): Promise<TokenResponse> => {
-  const response = await apiClient.post<TokenResponse>(
+  const response = await apiClient.post<SuccessResponse<TokenResponse>>(
     "/api/auth/refresh",
     data
   );
 
   // 새 토큰 저장
-  tokenStorage.setAccessToken(response.data.accessToken);
-  if (response.data.refreshToken) {
-    tokenStorage.setRefreshToken(response.data.refreshToken);
+  if (response.data.data) {
+    tokenStorage.setAccessToken(response.data.data.accessToken);
+    tokenStorage.setRefreshToken(response.data.data.refreshToken);
+    return response.data.data;
   }
 
-  return response.data;
+  throw new Error("Token refresh failed");
 };
 
 // 로그아웃

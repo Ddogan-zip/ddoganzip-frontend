@@ -4,6 +4,7 @@ import type {
   CartItemRequest,
   UpdateQuantityRequest,
   UpdateOptionsRequest,
+  CustomizeItemRequest,
 } from "./types";
 
 // 현재 사용자의 장바구니 조회
@@ -48,6 +49,18 @@ export const updateCartItemOptions = async (
 export const removeCartItem = async (itemId: number): Promise<CartResponse> => {
   const response = await apiClient.delete<CartResponse>(
     `/api/cart/items/${itemId}`
+  );
+  return response.data;
+};
+
+// 장바구니 아이템 커스터마이징 (개별 요리 추가/제거/변경)
+export const customizeCartItem = async (
+  itemId: number,
+  data: CustomizeItemRequest
+): Promise<CartResponse> => {
+  const response = await apiClient.post<CartResponse>(
+    `/api/cart/items/${itemId}/customize`,
+    data
   );
   return response.data;
 };
