@@ -143,7 +143,7 @@ export default function Home() {
               bgGradient="linear(to-r, brand.500, purple.500)"
               bgClip="text"
             >
-              똑간집 배달 서비스
+              또간집 배달 서비스
             </Heading>
           </VStack>
           <Text
