@@ -1,73 +1,378 @@
-# React + TypeScript + Vite
+# 똑간집 배달 서비스 (Ddoganzip Delivery Service)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+음성 인식 기술을 활용한 혁신적인 디너 배달 서비스 프론트엔드 애플리케이션입니다.
 
-Currently, two official plugins are available:
+## 📋 목차
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [프로젝트 소개](#프로젝트-소개)
+- [주요 기능](#주요-기능)
+- [기술 스택](#기술-스택)
+- [프로젝트 구조](#프로젝트-구조)
+- [시작하기](#시작하기)
+- [환경 변수 설정](#환경-변수-설정)
+- [주요 페이지](#주요-페이지)
+- [API 연동](#api-연동)
+- [개발 가이드](#개발-가이드)
 
-## React Compiler
+## 🎯 프로젝트 소개
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+똑간집 배달 서비스는 음성 인식 기술을 활용하여 사용자가 말로 간편하게 주문할 수 있는 웹 애플리케이션입니다. 사용자는 음성 명령으로 메뉴를 장바구니에 담고 주문할 수 있으며, 직원은 실시간으로 주문을 확인하고 관리할 수 있습니다.
 
-## Expanding the ESLint configuration
+## ✨ 주요 기능
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 사용자 기능
+- **음성 주문**: 음성 인식 기술을 활용한 핸즈프리 주문
+- **메뉴 탐색**: 직관적인 UI로 메뉴 확인 및 선택
+- **장바구니 관리**: 실시간 수량 조절, 삭제, 총액 계산
+- **주문 내역**: 과거 주문 내역 조회
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 직원 기능
+- **실시간 주문 대시보드**: 5초마다 자동 새로고침
+- **주문 관리**: 주문 수락/거절 처리
+- **통계 표시**: 대기 중인 주문 수 및 시스템 상태
+- **알림**: 새 주문 접수 시 실시간 토스트 알림
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### UI/UX 기능
+- **다크 모드**: 라이트/다크 모드 토글 지원
+- **반응형 디자인**: 모바일, 태블릿, 데스크톱 최적화
+- **실시간 피드백**: 토스트 알림 및 로딩 상태 표시
+- **애니메이션**: 부드러운 전환 효과 및 호버 애니메이션
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🛠 기술 스택
+
+### Core
+- **React 18.2**: UI 라이브러리
+- **TypeScript 5.8**: 타입 안정성
+- **Vite 7**: 빌드 도구 및 개발 서버
+
+### State Management & Data Fetching
+- **TanStack Query (React Query) 5**: 서버 상태 관리
+- **Axios 1.12**: HTTP 클라이언트
+
+### UI & Styling
+- **Chakra UI 2.10**: 컴포넌트 라이브러리
+- **Emotion 11**: CSS-in-JS
+- **Framer Motion 12**: 애니메이션
+
+### Routing
+- **React Router DOM 7**: 클라이언트 사이드 라우팅
+
+### Speech Recognition
+- **react-speech-recognition 4**: 음성 인식 (Web Speech API)
+
+## 📁 프로젝트 구조
+
+```
+ddoganzip-frontend/
+├── src/
+│   ├── api/                    # API 레이어
+│   │   ├── auth.ts            # 인증 API (로그인, 회원가입, 토큰 관리)
+│   │   ├── cart.ts            # 장바구니 API
+│   │   ├── client.ts          # Axios 인스턴스 및 인터셉터 설정
+│   │   ├── menu.ts            # 메뉴 API
+│   │   ├── orders.ts          # 주문 API
+│   │   ├── staff.ts           # 직원용 API
+│   │   ├── types.ts           # 공통 타입 정의
+│   │   └── voice.ts           # 음성 명령 처리 API
+│   ├── pages/                  # 페이지 컴포넌트
+│   │   ├── Home.tsx           # 홈 페이지 (랜딩)
+│   │   ├── MenuOrderPage.tsx # 주문 페이지 (음성 인식 + 메뉴)
+│   │   ├── StaffDashboardPage.tsx # 직원 대시보드
+│   │   ├── About.tsx          # 소개 페이지
+│   │   └── Todos.tsx          # 할 일 페이지
+│   ├── assets/                 # 정적 자산
+│   └── main.tsx               # 앱 진입점 및 라우터 설정
+├── public/                     # 공개 자산
+├── index.html                  # HTML 템플릿
+├── package.json               # 프로젝트 의존성
+├── tsconfig.json              # TypeScript 설정
+├── vite.config.ts             # Vite 설정
+└── README.md                  # 프로젝트 문서
+
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### API 레이어 구조
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```typescript
+src/api/
+├── client.ts        # Axios 설정, JWT 토큰 관리, 인터셉터
+├── types.ts         # 모든 API 타입 정의
+├── auth.ts          # 회원가입, 로그인, 로그아웃, 토큰 갱신
+├── menu.ts          # 메뉴 목록, 메뉴 상세 조회
+├── cart.ts          # 장바구니 CRUD 작업
+├── orders.ts        # 주문 생성, 주문 내역 조회
+├── staff.ts         # 직원용 주문 관리
+└── voice.ts         # 음성 명령 처리
 ```
+
+## 🚀 시작하기
+
+### 필수 조건
+
+- Node.js 18.x 이상
+- npm 또는 yarn
+
+### 설치
+
+```bash
+# 저장소 클론
+git clone https://github.com/Ddogan-zip/ddoganzip-frontend.git
+
+# 디렉토리 이동
+cd ddoganzip-frontend
+
+# 의존성 설치
+npm install
+# 또는
+yarn install
+```
+
+### 개발 서버 실행
+
+```bash
+npm run dev
+# 또는
+yarn dev
+```
+
+개발 서버가 `http://localhost:5173`에서 실행됩니다.
+
+### 빌드
+
+```bash
+npm run build
+# 또는
+yarn build
+```
+
+빌드된 파일은 `dist/` 폴더에 생성됩니다.
+
+### 프리뷰
+
+```bash
+npm run preview
+# 또는
+yarn preview
+```
+
+## 🔧 환경 변수 설정
+
+프로젝트 루트에 `.env` 파일을 생성하고 다음 변수를 설정하세요:
+
+```env
+# API Base URL
+VITE_API_BASE_URL=http://localhost:8080
+
+# 기타 환경 변수 추가...
+```
+
+**참고**: 환경 변수는 `VITE_` 접두사를 붙여야 Vite에서 인식합니다.
+
+## 📱 주요 페이지
+
+### 1. 홈 페이지 (`/`)
+- 서비스 소개 Hero 섹션
+- 주요 기능 카드 (음성 주문, 다양한 메뉴, 맞춤 서빙, 실시간 관리)
+- CTA 버튼 (주문하기, 직원 대시보드)
+
+### 2. 메뉴 주문 페이지 (`/order`)
+**왼쪽 패널**:
+- 음성 인식 상태 및 실시간 텍스트 표시
+- 장바구니 (수량 조절, 삭제, 총액)
+
+**오른쪽 패널**:
+- 메뉴 목록 (클릭으로 장바구니 추가)
+- 실시간 재고 상태
+
+**주요 기능**:
+- 음성으로 메뉴 주문
+- 클릭으로 메뉴 추가
+- 실시간 장바구니 관리
+- 주문 완료 처리
+
+### 3. 직원 대시보드 (`/staff`)
+**통계 카드**:
+- 대기 중인 주문 수
+- 자동 새로고침 상태
+- 시스템 온라인 상태
+
+**주문 관리**:
+- 주문 카드 (주문 번호, 시간, 내역)
+- 수락/거절 버튼
+- 실시간 알림
+
+## 🔌 API 연동
+
+### API 클라이언트 설정
+
+```typescript
+// src/api/client.ts
+import axios from "axios";
+
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+```
+
+### JWT 토큰 관리
+
+토큰은 LocalStorage에 저장되며, Axios 인터셉터가 자동으로 요청에 추가합니다:
+
+```typescript
+// Request Interceptor
+apiClient.interceptors.request.use((config) => {
+  const token = tokenStorage.getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response Interceptor (401 에러 시 토큰 갱신)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // 토큰 갱신 로직...
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### API 엔드포인트
+
+자세한 API 명세는 [백엔드 문서](https://ddogan-zip.github.io/ddoganzip-backend/)를 참조하세요.
+
+**주요 엔드포인트**:
+- `POST /api/auth/register` - 회원가입
+- `POST /api/auth/login` - 로그인
+- `GET /api/menu/list` - 메뉴 목록
+- `GET /api/menu/details/:id` - 메뉴 상세
+- `GET /api/cart` - 장바구니 조회
+- `POST /api/cart/items` - 장바구니 추가
+- `POST /api/orders/checkout` - 주문하기
+- `GET /api/orders/history` - 주문 내역
+- `GET /api/staff/orders/active` - 활성 주문 (직원용)
+- `PUT /api/staff/orders/:id/status` - 주문 상태 변경 (직원용)
+
+## 💻 개발 가이드
+
+### 코드 스타일
+
+```bash
+# ESLint 실행
+npm run lint
+```
+
+### 타입 체크
+
+```bash
+# TypeScript 타입 체크
+npx tsc --noEmit
+```
+
+### React Query DevTools
+
+개발 모드에서 React Query DevTools가 자동으로 활성화됩니다. 브라우저 우측 하단의 아이콘을 클릭하여 사용할 수 있습니다.
+
+### 새로운 API 추가
+
+1. `src/api/types.ts`에 타입 정의 추가
+2. `src/api/` 디렉토리에 API 함수 작성
+3. React Query hook 사용하여 컴포넌트에서 호출
+
+```typescript
+// 예시: 메뉴 목록 조회
+import { useQuery } from "@tanstack/react-query";
+import { getMenuList } from "../api/menu";
+
+export default function MenuPage() {
+  const { data, isPending, error } = useQuery({
+    queryKey: ["menu-list"],
+    queryFn: getMenuList,
+  });
+
+  if (isPending) return <Spinner />;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>{/* 메뉴 렌더링 */}</div>;
+}
+```
+
+### 새로운 페이지 추가
+
+1. `src/pages/` 디렉토리에 컴포넌트 생성
+2. `src/main.tsx`의 라우터에 추가
+
+```typescript
+const router = createBrowserRouter([
+  {
+    element: <Layout />,
+    children: [
+      // 기존 라우트...
+      {
+        path: "new-page",
+        lazy: async () => ({
+          Component: (await import("./pages/NewPage")).default,
+        }),
+      },
+    ],
+  },
+]);
+```
+
+## 🎨 디자인 시스템
+
+### 브랜드 컬러
+
+```typescript
+colors: {
+  brand: {
+    50: "#e3f2fd",
+    100: "#bbdefb",
+    200: "#90caf9",
+    300: "#64b5f6",
+    400: "#42a5f5",
+    500: "#2196f3",  // Primary
+    600: "#1e88e5",
+    700: "#1976d2",
+    800: "#1565c0",
+    900: "#0d47a1",
+  },
+}
+```
+
+### 컴포넌트 사용 예시
+
+```typescript
+import { Button, Card, CardBody, Heading } from "@chakra-ui/react";
+
+<Card>
+  <CardBody>
+    <Heading size="md">제목</Heading>
+    <Button colorScheme="brand">버튼</Button>
+  </CardBody>
+</Card>
+```
+
+## 📝 라이선스
+
+이 프로젝트는 비공개 프로젝트입니다.
+
+## 👥 기여자
+
+- 프론트엔드 개발팀
+- 백엔드 개발팀
+- 음성인식 개발팀
+
+## 📧 문의
+
+프로젝트 관련 문의사항은 이슈를 생성해주세요.
+
+---
+
+**Powered by React + TypeScript + Vite + Chakra UI**
