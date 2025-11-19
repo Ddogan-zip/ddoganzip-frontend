@@ -159,45 +159,43 @@ export function Layout() {
                 >
                   홈
                 </Link>
+                <Link
+                  as={RouterLink}
+                  to="/order"
+                  px={4}
+                  py={2}
+                  rounded="full"
+                  fontWeight={isActive("/order") ? "semibold" : "medium"}
+                  color={isActive("/order") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  bg={isActive("/order") ? "brand.500" : "transparent"}
+                  _hover={{
+                    textDecoration: "none",
+                    bg: isActive("/order") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    transform: "translateY(-2px)",
+                  }}
+                  transition="all 0.2s"
+                >
+                  메뉴 주문
+                </Link>
                 {isAuthenticated && (
-                  <>
-                    <Link
-                      as={RouterLink}
-                      to="/order"
-                      px={4}
-                      py={2}
-                      rounded="full"
-                      fontWeight={isActive("/order") ? "semibold" : "medium"}
-                      color={isActive("/order") ? "white" : useColorModeValue("gray.700", "gray.200")}
-                      bg={isActive("/order") ? "brand.500" : "transparent"}
-                      _hover={{
-                        textDecoration: "none",
-                        bg: isActive("/order") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
-                        transform: "translateY(-2px)",
-                      }}
-                      transition="all 0.2s"
-                    >
-                      메뉴 주문
-                    </Link>
-                    <Link
-                      as={RouterLink}
-                      to="/staff"
-                      px={4}
-                      py={2}
-                      rounded="full"
-                      fontWeight={isActive("/staff") ? "semibold" : "medium"}
-                      color={isActive("/staff") ? "white" : useColorModeValue("gray.700", "gray.200")}
-                      bg={isActive("/staff") ? "brand.500" : "transparent"}
-                      _hover={{
-                        textDecoration: "none",
-                        bg: isActive("/staff") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
-                        transform: "translateY(-2px)",
-                      }}
-                      transition="all 0.2s"
-                    >
-                      직원 대시보드
-                    </Link>
-                  </>
+                  <Link
+                    as={RouterLink}
+                    to="/staff"
+                    px={4}
+                    py={2}
+                    rounded="full"
+                    fontWeight={isActive("/staff") ? "semibold" : "medium"}
+                    color={isActive("/staff") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                    bg={isActive("/staff") ? "brand.500" : "transparent"}
+                    _hover={{
+                      textDecoration: "none",
+                      bg: isActive("/staff") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                      transform: "translateY(-2px)",
+                    }}
+                    transition="all 0.2s"
+                  >
+                    직원 대시보드
+                  </Link>
                 )}
               </HStack>
             </HStack>
@@ -320,11 +318,9 @@ function Root() {
                   <Route
                     path="order"
                     element={
-                      <ProtectedRoute>
-                        <React.Suspense fallback={<div>Loading...</div>}>
-                          <MenuOrderPage />
-                        </React.Suspense>
-                      </ProtectedRoute>
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <MenuOrderPage />
+                      </React.Suspense>
                     }
                   />
                   <Route
