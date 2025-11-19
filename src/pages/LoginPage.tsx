@@ -59,7 +59,7 @@ export default function LoginPage() {
             로그인
           </Heading>
           <Text color={useColorModeValue("gray.600", "gray.400")}>
-            똑간집에 오신 것을 환영합니다
+            또간집에 오신 것을 환영합니다
           </Text>
         </Box>
 

@@ -143,7 +143,7 @@ export default function Home() {
               bgGradient="linear(to-r, brand.500, purple.500)"
               bgClip="text"
             >
-              똑간집 배달 서비스
+              또간집 배달 서비스
             </Heading>
           </VStack>
           <Text
@@ -212,7 +212,7 @@ export default function Home() {
               fontSize="lg"
               color={useColorModeValue("gray.600", "gray.400")}
             >
-              똑간집이 제공하는 혁신적인 서비스
+              또간집이 제공하는 혁신적인 서비스
             </Text>
           </VStack>
 
