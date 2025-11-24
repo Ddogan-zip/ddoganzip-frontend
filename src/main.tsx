@@ -160,6 +160,24 @@ export function Layout() {
                 >
                   홈
                 </Link>
+                <Link
+                  as={RouterLink}
+                  to="/menu"
+                  px={4}
+                  py={2}
+                  rounded="full"
+                  fontWeight={isActive("/menu") ? "semibold" : "medium"}
+                  color={isActive("/menu") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  bg={isActive("/menu") ? "brand.500" : "transparent"}
+                  _hover={{
+                    textDecoration: "none",
+                    bg: isActive("/menu") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    transform: "translateY(-2px)",
+                  }}
+                  transition="all 0.2s"
+                >
+                  메뉴 보기
+                </Link>
                 {isAuthenticated && (
                   <>
                     <Link
@@ -291,6 +309,7 @@ const Home = React.lazy(() => import("./pages/Home"));
 const LoginPage = React.lazy(() => import("./pages/LoginPage"));
 const RegisterPage = React.lazy(() => import("./pages/RegisterPage"));
 const About = React.lazy(() => import("./pages/About"));
+const MenuBrowsePage = React.lazy(() => import("./pages/MenuBrowsePage"));
 const MenuOrderPage = React.lazy(() => import("./pages/MenuOrderPage"));
 const OrderHistoryPage = React.lazy(() => import("./pages/OrderHistoryPage"));
 const StaffDashboardPage = React.lazy(() => import("./pages/StaffDashboardPage"));
@@ -336,6 +355,14 @@ function Root() {
                     element={
                       <React.Suspense fallback={<div>Loading...</div>}>
                         <About />
+                      </React.Suspense>
+                    }
+                  />
+                  <Route
+                    path="menu"
+                    element={
+                      <React.Suspense fallback={<div>Loading...</div>}>
+                        <MenuBrowsePage />
                       </React.Suspense>
                     }
                   />
