@@ -43,7 +43,6 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  Checkbox,
   FormControl,
   FormLabel,
   Input,
@@ -271,17 +270,19 @@ export default function MenuOrderPage() {
     });
   };
 
-  // 커스터마이징 토글
-  const handleCustomizationToggle = (dishId: number) => {
+  // 커스터마이징 수량 변경
+  const handleCustomizationQuantityChange = (dishId: number, quantity: number) => {
     setCustomizations((prev) => {
       const newMap = new Map(prev);
-      if (newMap.has(dishId)) {
+      if (quantity === 0) {
+        // 수량이 0이면 제거
         newMap.delete(dishId);
       } else {
+        // 수량이 1 이상이면 추가/업데이트
         newMap.set(dishId, {
           action: "ADD",
           dishId,
-          quantity: 1,
+          quantity,
         });
       }
       return newMap;
@@ -817,23 +818,48 @@ export default function MenuOrderPage() {
                 <Box>
                   <FormLabel fontWeight="bold">커스터마이징 (선택사항)</FormLabel>
                   <Text fontSize="sm" color="gray.600" mb={2}>
-                    추가하고 싶은 요리를 선택하세요
+                    추가하고 싶은 요리와 수량을 선택하세요
                   </Text>
-                  <VStack align="stretch" spacing={2}>
-                    {selectedDinner.dishes.map((dish) => (
-                      <Checkbox
-                        key={dish.dishId}
-                        isChecked={customizations.has(dish.dishId)}
-                        onChange={() => handleCustomizationToggle(dish.dishId)}
-                      >
-                        <HStack>
-                          <Text>{dish.name} 추가</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            (+{dish.basePrice.toLocaleString()}원)
-                          </Text>
+                  <VStack align="stretch" spacing={3}>
+                    {selectedDinner.dishes.map((dish) => {
+                      const currentQty = customizations.get(dish.dishId)?.quantity || 0;
+                      return (
+                        <HStack
+                          key={dish.dishId}
+                          p={3}
+                          bg={currentQty > 0 ? "brand.50" : "gray.50"}
+                          rounded="md"
+                          justify="space-between"
+                        >
+                          <VStack align="start" spacing={0} flex={1}>
+                            <Text fontWeight="medium">{dish.name}</Text>
+                            <Text fontSize="sm" color="gray.600">
+                              +{dish.basePrice.toLocaleString()}원
+                            </Text>
+                          </VStack>
+                          <HStack spacing={2}>
+                            <IconButton
+                              aria-label="감소"
+                              icon={<FaMinus />}
+                              size="sm"
+                              onClick={() => handleCustomizationQuantityChange(dish.dishId, Math.max(0, currentQty - 1))}
+                              isDisabled={currentQty === 0}
+                              colorScheme={currentQty > 0 ? "brand" : "gray"}
+                            />
+                            <Text fontWeight="bold" minW="30px" textAlign="center">
+                              {currentQty}
+                            </Text>
+                            <IconButton
+                              aria-label="증가"
+                              icon={<FaPlus />}
+                              size="sm"
+                              onClick={() => handleCustomizationQuantityChange(dish.dishId, currentQty + 1)}
+                              colorScheme="brand"
+                            />
+                          </HStack>
                         </HStack>
-                      </Checkbox>
-                    ))}
+                      );
+                    })}
                   </VStack>
                 </Box>
 
