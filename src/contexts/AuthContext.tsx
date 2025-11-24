@@ -74,6 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = tokenStorage.getAccessToken();
       if (token) {
         const userFromToken = extractUserFromToken(token);
+        console.log("=== AuthContext Login Debug ===");
+        console.log("User from token:", userFromToken);
+        console.log("================================");
+
         if (userFromToken) {
           setUser(userFromToken);
           userStorage.setUser(userFromToken);

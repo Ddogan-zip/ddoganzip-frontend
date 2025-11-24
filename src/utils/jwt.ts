@@ -52,9 +52,42 @@ export function extractUserFromToken(token: string): {
     return null;
   }
 
+  // 디버깅: JWT 페이로드 전체 출력
+  console.log("=== JWT Payload Debug ===");
+  console.log("Full payload:", JSON.stringify(payload, null, 2));
+  console.log("Role field:", payload.role);
+  console.log("========================");
+
+  // role 필드를 여러 가능한 이름으로 확인
+  let role: string | undefined = undefined;
+
+  // 1. 직접 role 필드 확인
+  if (payload.role) {
+    role = payload.role;
+  }
+
+  // 2. authorities 배열 확인 (Spring Security)
+  else if ((payload as any).authorities && Array.isArray((payload as any).authorities)) {
+    const authorities = (payload as any).authorities;
+    if (authorities.length > 0) {
+      // "ROLE_STAFF" 형태에서 "STAFF" 추출
+      role = authorities[0].replace(/^ROLE_/, "");
+    }
+  }
+
+  // 3. roles 배열 확인
+  else if ((payload as any).roles && Array.isArray((payload as any).roles)) {
+    const roles = (payload as any).roles;
+    if (roles.length > 0) {
+      role = roles[0];
+    }
+  }
+
+  console.log("Extracted role:", role);
+
   return {
     email: payload.sub,
     name: payload.sub.split("@")[0],
-    role: payload.role,
+    role: role,
   };
 }

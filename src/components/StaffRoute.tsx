@@ -10,6 +10,13 @@ interface StaffRouteProps {
 export default function StaffRoute({ children }: StaffRouteProps) {
   const { user } = useAuth();
 
+  // 디버깅
+  console.log("=== StaffRoute Debug ===");
+  console.log("User object:", user);
+  console.log("User role:", user?.role);
+  console.log("Is STAFF?:", user?.role === "STAFF");
+  console.log("========================");
+
   // 먼저 로그인 체크
   return (
     <ProtectedRoute>

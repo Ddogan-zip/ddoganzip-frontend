@@ -4,6 +4,7 @@ import type {
   ActiveOrder,
   ActiveOrdersResponse,
   UpdateOrderStatusRequest,
+  InventoryItem,
 } from "./types";
 
 // 배달 완료되지 않은 모든 주문 조회 (직원 전용)
@@ -23,5 +24,11 @@ export const updateOrderStatus = async (
     `/api/staff/orders/${orderId}/status`,
     data
   );
+  return response.data;
+};
+
+// 재고 목록 조회 (직원 전용)
+export const getInventory = async (): Promise<InventoryItem[]> => {
+  const response = await apiClient.get<InventoryItem[]>("/api/staff/inventory");
   return response.data;
 };
