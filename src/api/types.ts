@@ -198,5 +198,12 @@ export interface ActiveOrder {
   itemCount: number; // 주문 아이템 개수
 }
 
+export interface InventoryItem {
+  dishId: number;
+  dishName: string;
+  currentStock: number;
+  minimumStock?: number;
+}
+
 // 진행 중인 주문은 ActiveOrder 배열로 직접 반환
 export type ActiveOrdersResponse = ActiveOrder[];
