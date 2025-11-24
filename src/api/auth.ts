@@ -18,16 +18,16 @@ export const register = async (data: RegisterRequest): Promise<void> => {
 
 // 로그인
 export const login = async (data: LoginRequest): Promise<TokenResponse> => {
-  const response = await apiClient.post<SuccessResponse<TokenResponse>>(
+  const response = await apiClient.post<TokenResponse>(
     "/api/auth/login",
     data
   );
 
-  // 토큰 저장 (data 필드 안에 있음)
-  if (response.data.data) {
-    tokenStorage.setAccessToken(response.data.data.accessToken);
-    tokenStorage.setRefreshToken(response.data.data.refreshToken);
-    return response.data.data;
+  // 백엔드가 TokenResponse를 직접 반환 (SuccessResponse 래퍼 없음)
+  if (response.data && response.data.accessToken && response.data.refreshToken) {
+    tokenStorage.setAccessToken(response.data.accessToken);
+    tokenStorage.setRefreshToken(response.data.refreshToken);
+    return response.data;
   }
 
   throw new Error("Login failed: no token received");
@@ -37,16 +37,16 @@ export const login = async (data: LoginRequest): Promise<TokenResponse> => {
 export const refreshToken = async (
   data: RefreshRequest
 ): Promise<TokenResponse> => {
-  const response = await apiClient.post<SuccessResponse<TokenResponse>>(
+  const response = await apiClient.post<TokenResponse>(
     "/api/auth/refresh",
     data
   );
 
-  // 새 토큰 저장
-  if (response.data.data) {
-    tokenStorage.setAccessToken(response.data.data.accessToken);
-    tokenStorage.setRefreshToken(response.data.data.refreshToken);
-    return response.data.data;
+  // 백엔드가 TokenResponse를 직접 반환
+  if (response.data && response.data.accessToken && response.data.refreshToken) {
+    tokenStorage.setAccessToken(response.data.accessToken);
+    tokenStorage.setRefreshToken(response.data.refreshToken);
+    return response.data;
   }
 
   throw new Error("Token refresh failed");
