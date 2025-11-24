@@ -9,7 +9,7 @@ import type {
 
 // 회원가입
 export const register = async (data: RegisterRequest): Promise<void> => {
-  const response = await apiClient.post<SuccessResponse<null>>(
+  await apiClient.post<SuccessResponse<null>>(
     "/api/auth/register",
     data
   );

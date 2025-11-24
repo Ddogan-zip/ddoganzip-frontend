@@ -6,7 +6,6 @@ import { tokenStorage } from "../api/client";
 import type {
   LoginRequest,
   RegisterRequest,
-  TokenResponse,
 } from "../api/types";
 
 interface User {
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (data: LoginRequest) => {
     try {
       setIsLoading(true);
-      const response: TokenResponse = await authApi.login(data);
+      await authApi.login(data);
 
       // 토큰은 이미 auth.ts에서 저장됨
       setUser({

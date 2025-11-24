@@ -34,7 +34,6 @@ export default function StaffDashboardPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   const { data: pendingOrders, isPending } = useQuery<LegacyOrder[]>({
     queryKey: ["pending-orders"],
