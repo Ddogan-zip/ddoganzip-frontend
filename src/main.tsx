@@ -180,6 +180,24 @@ export function Layout() {
                     >
                       메뉴 주문
                     </Link>
+                    <Link
+                      as={RouterLink}
+                      to="/orders"
+                      px={4}
+                      py={2}
+                      rounded="full"
+                      fontWeight={isActive("/orders") ? "semibold" : "medium"}
+                      color={isActive("/orders") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                      bg={isActive("/orders") ? "brand.500" : "transparent"}
+                      _hover={{
+                        textDecoration: "none",
+                        bg: isActive("/orders") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                        transform: "translateY(-2px)",
+                      }}
+                      transition="all 0.2s"
+                    >
+                      내 주문
+                    </Link>
                     {user?.role === "STAFF" && (
                       <Link
                         as={RouterLink}
@@ -274,6 +292,7 @@ const LoginPage = React.lazy(() => import("./pages/LoginPage"));
 const RegisterPage = React.lazy(() => import("./pages/RegisterPage"));
 const About = React.lazy(() => import("./pages/About"));
 const MenuOrderPage = React.lazy(() => import("./pages/MenuOrderPage"));
+const OrderHistoryPage = React.lazy(() => import("./pages/OrderHistoryPage"));
 const StaffDashboardPage = React.lazy(() => import("./pages/StaffDashboardPage"));
 const Todos = React.lazy(() => import("./pages/Todos"));
 
@@ -326,6 +345,16 @@ function Root() {
                       <ProtectedRoute>
                         <React.Suspense fallback={<div>Loading...</div>}>
                           <MenuOrderPage />
+                        </React.Suspense>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="orders"
+                    element={
+                      <ProtectedRoute>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                          <OrderHistoryPage />
                         </React.Suspense>
                       </ProtectedRoute>
                     }
