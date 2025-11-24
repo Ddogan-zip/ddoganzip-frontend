@@ -66,8 +66,10 @@ apiClient.interceptors.response.use(
             refreshToken,
           });
 
-          const { accessToken } = response.data;
+          // SuccessResponse<TokenResponse> 형식으로 반환됨
+          const { accessToken, refreshToken: newRefreshToken } = response.data.data;
           tokenStorage.setAccessToken(accessToken);
+          tokenStorage.setRefreshToken(newRefreshToken);
 
           // 원래 요청 재시도
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;

@@ -25,23 +25,38 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// 사용자 정보 저장소 (localStorage 사용)
+const USER_STORAGE_KEY = "user";
+
+const userStorage = {
+  getUser: (): User | null => {
+    const userJson = localStorage.getItem(USER_STORAGE_KEY);
+    return userJson ? JSON.parse(userJson) : null;
+  },
+  setUser: (user: User): void => {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  },
+  clearUser: (): void => {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  },
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
   const navigate = useNavigate();
 
-  // 앱 시작시 토큰 확인
+  // 앱 시작시 토큰 및 사용자 정보 확인
   useEffect(() => {
     const initAuth = () => {
       const token = tokenStorage.getAccessToken();
       if (token) {
-        // TODO: 토큰으로 사용자 정보 가져오기
-        // 지금은 토큰이 있으면 로그인된 것으로 간주
-        setUser({
-          email: "user@example.com",
-          name: "사용자",
-        });
+        // localStorage에서 사용자 정보 불러오기
+        const savedUser = userStorage.getUser();
+        if (savedUser) {
+          setUser(savedUser);
+        }
       }
       setIsLoading(false);
     };
@@ -55,10 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authApi.login(data);
 
       // 토큰은 이미 auth.ts에서 저장됨
-      setUser({
+      const user = {
         email: data.email,
         name: data.email.split("@")[0],
-      });
+      };
+      setUser(user);
+      userStorage.setUser(user); // localStorage에 사용자 정보 저장
 
       toast({
         title: "로그인 성공",
@@ -105,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       toast({
         title: "회원가입 실패",
-        description: error.response?.data?.message || "회원가입에 실패했습니다.",
+        description: error.response?.data?.error?.message || "회원가입에 실패했습니다.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -123,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("로그아웃 API 호출 실패:", error);
     } finally {
       tokenStorage.clearTokens();
+      userStorage.clearUser(); // localStorage에서 사용자 정보 삭제
       setUser(null);
       toast({
         title: "로그아웃",
