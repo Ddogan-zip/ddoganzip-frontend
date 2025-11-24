@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { LegacyOrder } from "../api/orders";
-import { getPendingOrders, updateOrderStatus } from "../api/orders";
+import { getActiveOrders, updateOrderStatus } from "../api/staff";
+import type { ActiveOrder, OrderStatus } from "../api/types";
 import {
   Box,
   Heading,
@@ -27,60 +27,65 @@ import {
   StatNumber,
   Icon,
 } from "@chakra-ui/react";
-import { FaCheckCircle, FaTimesCircle, FaBox, FaClock } from "react-icons/fa";
-import { useEffect } from "react";
+import { FaBox, FaClock, FaUser, FaMapMarkerAlt } from "react-icons/fa";
+
+// 상태별 한글 이름과 색상
+const STATUS_CONFIG: Record<OrderStatus, { label: string; colorScheme: string }> = {
+  CHECKING_STOCK: { label: "재고 확인 중", colorScheme: "yellow" },
+  RECEIVED: { label: "주문 접수", colorScheme: "blue" },
+  IN_KITCHEN: { label: "조리 중", colorScheme: "purple" },
+  DELIVERING: { label: "배달 중", colorScheme: "orange" },
+  DELIVERED: { label: "배달 완료", colorScheme: "green" },
+  CANCELLED: { label: "취소됨", colorScheme: "red" },
+};
+
+// 다음 가능한 상태들
+const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
+  CHECKING_STOCK: ["RECEIVED", "CANCELLED"],
+  RECEIVED: ["IN_KITCHEN", "CANCELLED"],
+  IN_KITCHEN: ["DELIVERING", "CANCELLED"],
+  DELIVERING: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
 
 export default function StaffDashboardPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const cardBg = useColorModeValue("white", "gray.800");
 
-  const { data: pendingOrders, isPending } = useQuery<LegacyOrder[]>({
-    queryKey: ["pending-orders"],
-    queryFn: getPendingOrders,
+  const { data: activeOrders, isPending } = useQuery<ActiveOrder[]>({
+    queryKey: ["active-orders"],
+    queryFn: getActiveOrders,
     refetchInterval: 5000,
   });
 
   const { mutate: changeOrderStatus, isPending: isUpdatingStatus } =
     useMutation({
-      mutationFn: updateOrderStatus,
+      mutationFn: ({ orderId, status }: { orderId: number; status: OrderStatus }) =>
+        updateOrderStatus(orderId, { status }),
       onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({ queryKey: ["pending-orders"] });
+        queryClient.invalidateQueries({ queryKey: ["active-orders"] });
         toast({
           title: "주문 상태 변경 완료",
-          description: `주문 #${variables.orderId}이(가) ${
-            variables.status === "accepted" ? "수락" : "거절"
-          }되었습니다.`,
-          status: variables.status === "accepted" ? "success" : "info",
+          description: `주문 #${variables.orderId}의 상태가 "${
+            STATUS_CONFIG[variables.status].label
+          }"(으)로 변경되었습니다.`,
+          status: "success",
           duration: 3000,
           isClosable: true,
         });
       },
-      onError: (error) => {
+      onError: (error: any) => {
         toast({
           title: "상태 변경 실패",
-          description: error.message,
+          description: error.response?.data?.error?.message || error.message,
           status: "error",
           duration: 3000,
           isClosable: true,
         });
       },
     });
-
-  // 새 주문 알림
-  useEffect(() => {
-    if (pendingOrders && pendingOrders.length > 0) {
-      const latestOrder = pendingOrders[0];
-      toast({
-        title: "새로운 주문",
-        description: `주문 #${latestOrder.id}이(가) 접수되었습니다.`,
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-        position: "top-right",
-      });
-    }
-  }, [pendingOrders?.length]);
 
   return (
     <VStack spacing={8} align="stretch">
@@ -100,7 +105,7 @@ export default function StaffDashboardPage() {
           bgGradient="linear(to-r, orange.500, red.500)"
           bgClip="text"
         >
-          👨‍💼 주문 대시보드
+          👨‍💼 주문 관리 대시보드
         </Heading>
         <HStack spacing={2} align="center">
           <Icon as={FaClock} color="green.500" boxSize={5} />
@@ -122,13 +127,11 @@ export default function StaffDashboardPage() {
           borderWidth="2px"
           borderColor="orange.400"
           rounded="2xl"
-          transition="all 0.3s"
-          _hover={{ shadow: "2xl", transform: "translateY(-4px)" }}
         >
           <CardBody>
             <Stat>
               <StatLabel fontSize="md" fontWeight="medium">
-                🔔 대기 중인 주문
+                🔔 진행 중인 주문
               </StatLabel>
               <StatNumber
                 fontSize="4xl"
@@ -136,7 +139,7 @@ export default function StaffDashboardPage() {
                 bgGradient="linear(to-r, orange.500, red.500)"
                 bgClip="text"
               >
-                {pendingOrders?.length || 0}
+                {activeOrders?.length || 0}
               </StatNumber>
             </Stat>
           </CardBody>
@@ -147,8 +150,6 @@ export default function StaffDashboardPage() {
           borderWidth="2px"
           borderColor="green.400"
           rounded="2xl"
-          transition="all 0.3s"
-          _hover={{ shadow: "2xl", transform: "translateY(-4px)" }}
         >
           <CardBody>
             <Stat>
@@ -169,8 +170,6 @@ export default function StaffDashboardPage() {
           borderWidth="2px"
           borderColor={isPending ? "yellow.400" : "green.400"}
           rounded="2xl"
-          transition="all 0.3s"
-          _hover={{ shadow: "2xl", transform: "translateY(-4px)" }}
         >
           <CardBody>
             <Stat>
@@ -213,7 +212,7 @@ export default function StaffDashboardPage() {
       )}
 
       {/* Empty State */}
-      {!isPending && pendingOrders && pendingOrders.length === 0 && (
+      {!isPending && activeOrders && activeOrders.length === 0 && (
         <Alert
           status="info"
           variant="subtle"
@@ -226,7 +225,7 @@ export default function StaffDashboardPage() {
         >
           <Icon as={FaBox} boxSize={12} color="brand.500" mb={4} />
           <AlertTitle fontSize="lg" mb={2}>
-            대기 중인 주문이 없습니다
+            진행 중인 주문이 없습니다
           </AlertTitle>
           <AlertDescription maxW="sm">
             새로운 주문이 들어오면 자동으로 표시됩니다.
@@ -236,140 +235,123 @@ export default function StaffDashboardPage() {
 
       {/* Orders List */}
       <VStack spacing={4} align="stretch">
-        {pendingOrders?.map((order: LegacyOrder) => (
-          <Card
-            key={order.id}
-            bg={cardBg}
-            shadow="xl"
-            borderWidth="2px"
-            borderColor="yellow.400"
-            rounded="2xl"
-            transition="all 0.3s"
-            _hover={{ shadow: "2xl", transform: "translateY(-2px)" }}
-            position="relative"
-            overflow="hidden"
-            _before={{
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "6px",
-              bgGradient: "linear(to-r, yellow.400, orange.400)",
-            }}
-          >
-            <CardHeader pt={8}>
-              <HStack justify="space-between">
-                <VStack align="start" spacing={2}>
-                  <Heading
-                    size="lg"
-                    bgGradient="linear(to-r, orange.500, red.500)"
-                    bgClip="text"
-                  >
-                    🍽️ 주문 #{order.id}
-                  </Heading>
-                  <HStack>
-                    <Icon as={FaClock} color="gray.500" boxSize={4} />
-                    <Text fontSize="sm" color={useColorModeValue("gray.600", "gray.400")}>
-                      {new Date(order.createdAt).toLocaleString("ko-KR")}
+        {activeOrders?.map((order: ActiveOrder) => {
+          const statusConfig = STATUS_CONFIG[order.status];
+          const nextStatuses = NEXT_STATUSES[order.status];
+
+          return (
+            <Card
+              key={order.orderId}
+              bg={cardBg}
+              shadow="xl"
+              borderWidth="2px"
+              borderColor={`${statusConfig.colorScheme}.400`}
+              rounded="2xl"
+              position="relative"
+              overflow="hidden"
+              _before={{
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "6px",
+                bgGradient: `linear(to-r, ${statusConfig.colorScheme}.400, ${statusConfig.colorScheme}.600)`,
+              }}
+            >
+              <CardHeader pt={8}>
+                <HStack justify="space-between" align="start">
+                  <VStack align="start" spacing={3} flex={1}>
+                    <Heading
+                      size="lg"
+                      bgGradient="linear(to-r, orange.500, red.500)"
+                      bgClip="text"
+                    >
+                      🍽️ 주문 #{order.orderId}
+                    </Heading>
+
+                    <VStack align="start" spacing={2} fontSize="sm">
+                      <HStack>
+                        <Icon as={FaUser} color="gray.500" />
+                        <Text fontWeight="medium">{order.customerName}</Text>
+                        <Text color="gray.500">({order.customerEmail})</Text>
+                      </HStack>
+
+                      <HStack>
+                        <Icon as={FaMapMarkerAlt} color="gray.500" />
+                        <Text>{order.deliveryAddress}</Text>
+                      </HStack>
+
+                      <HStack>
+                        <Icon as={FaClock} color="gray.500" />
+                        <Text>주문: {new Date(order.orderDate).toLocaleString("ko-KR")}</Text>
+                      </HStack>
+
+                      {order.deliveryDate && (
+                        <HStack>
+                          <Icon as={FaClock} color="orange.500" />
+                          <Text fontWeight="medium">
+                            희망 배송: {new Date(order.deliveryDate).toLocaleString("ko-KR")}
+                          </Text>
+                        </HStack>
+                      )}
+                    </VStack>
+                  </VStack>
+
+                  <VStack align="end" spacing={2}>
+                    <Badge
+                      colorScheme={statusConfig.colorScheme}
+                      fontSize="md"
+                      px={4}
+                      py={2}
+                      rounded="full"
+                      fontWeight="bold"
+                    >
+                      {statusConfig.label}
+                    </Badge>
+                    <Text fontSize="xl" fontWeight="black" color="green.600">
+                      {order.totalPrice.toLocaleString()}원
                     </Text>
+                    <Text fontSize="sm" color="gray.500">
+                      {order.itemCount}개 품목
+                    </Text>
+                  </VStack>
+                </HStack>
+              </CardHeader>
+
+              <Divider />
+
+              <CardFooter pt={6}>
+                {nextStatuses.length > 0 ? (
+                  <HStack spacing={3} width="100%">
+                    {nextStatuses.map((nextStatus) => {
+                      const nextConfig = STATUS_CONFIG[nextStatus];
+                      return (
+                        <Button
+                          key={nextStatus}
+                          flex={1}
+                          size="lg"
+                          rounded="full"
+                          colorScheme={nextConfig.colorScheme}
+                          onClick={() =>
+                            changeOrderStatus({ orderId: order.orderId, status: nextStatus })
+                          }
+                          isDisabled={isUpdatingStatus}
+                        >
+                          {nextConfig.label}
+                        </Button>
+                      );
+                    })}
                   </HStack>
-                </VStack>
-                <Badge
-                  colorScheme="yellow"
-                  fontSize="md"
-                  px={4}
-                  py={2}
-                  rounded="full"
-                  fontWeight="bold"
-                >
-                  ⏳ 대기중
-                </Badge>
-              </HStack>
-            </CardHeader>
-
-            <Divider />
-
-            <CardBody>
-              <VStack align="stretch" spacing={2}>
-                <Text fontWeight="semibold" mb={2}>
-                  주문 내역:
-                </Text>
-                {order.items.map((item, index) => (
-                  <HStack
-                    key={index}
-                    justify="space-between"
-                    p={2}
-                    bg={useColorModeValue("gray.50", "gray.700")}
-                    rounded="md"
-                  >
-                    <Text>
-                      {item.name} x {item.quantity}
-                    </Text>
-                    <Text fontWeight="medium">
-                      {(item.price * item.quantity).toLocaleString()}원
-                    </Text>
-                  </HStack>
-                ))}
-              </VStack>
-            </CardBody>
-
-            <Divider />
-
-            <CardFooter pt={6}>
-              <HStack spacing={4} width="100%">
-                <Button
-                  leftIcon={<FaCheckCircle />}
-                  bgGradient="linear(to-r, green.400, green.600)"
-                  color="white"
-                  flex={1}
-                  size="lg"
-                  rounded="full"
-                  onClick={() =>
-                    changeOrderStatus({ orderId: order.id, status: "accepted" })
-                  }
-                  isDisabled={isUpdatingStatus}
-                  _hover={{
-                    bgGradient: "linear(to-r, green.500, green.700)",
-                    transform: "translateY(-2px)",
-                    shadow: "xl",
-                  }}
-                  _active={{
-                    transform: "translateY(0)",
-                  }}
-                  shadow="md"
-                >
-                  ✅ 수락
-                </Button>
-                <Button
-                  leftIcon={<FaTimesCircle />}
-                  variant="outline"
-                  borderColor="red.400"
-                  borderWidth="2px"
-                  color="red.500"
-                  flex={1}
-                  size="lg"
-                  rounded="full"
-                  onClick={() =>
-                    changeOrderStatus({ orderId: order.id, status: "rejected" })
-                  }
-                  isDisabled={isUpdatingStatus}
-                  _hover={{
-                    bg: useColorModeValue("red.50", "red.900"),
-                    borderColor: "red.500",
-                    transform: "translateY(-2px)",
-                    shadow: "xl",
-                  }}
-                  _active={{
-                    transform: "translateY(0)",
-                  }}
-                >
-                  ❌ 거절
-                </Button>
-              </HStack>
-            </CardFooter>
-          </Card>
-        ))}
+                ) : (
+                  <Text color="gray.500" textAlign="center" width="100%">
+                    이 주문은 완료되었습니다.
+                  </Text>
+                )}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </VStack>
     </VStack>
   );
