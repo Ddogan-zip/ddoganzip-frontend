@@ -62,7 +62,7 @@ export const placeOrder = async (
     // 기본값으로 체크아웃 요청
     await checkout({
       deliveryAddress: "기본 배송지", // 실제로는 사용자 입력 필요
-      deliveryDate: new Date().toISOString(),
+      paymentMethod: "card",
     });
     return { success: true };
   } catch (error) {
@@ -78,7 +78,7 @@ export const getPendingOrders = async (): Promise<LegacyOrder[]> => {
 
   // 새 Order 타입을 레거시 Order 타입으로 변환
   return orders
-    .filter((o) => o.status === "CHECKING_STOCK" || o.status === "RECEIVED")
+    .filter((o) => o.status === "PENDING" || o.status === "PREPARING")
     .map((o) => ({
       id: o.orderId,
       items: [], // 레거시 형식에 맞게 변환 필요
