@@ -47,7 +47,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
 } from "@chakra-ui/react";
 import {
   FaMicrophone,
@@ -90,7 +89,7 @@ export default function MenuOrderPage() {
 
   // Checkout 폼 상태
   const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [deliveryDate, setDeliveryDate] = useState("");
 
   // 음성 인식 상태
   const [voiceResult, setVoiceResult] = useState<VoiceCommand | null>(null);
@@ -227,7 +226,7 @@ export default function MenuOrderPage() {
       });
       onCheckoutClose();
       setDeliveryAddress("");
-      setPaymentMethod("card");
+      setDeliveryDate("");
     },
     onError: (error: any) => {
       toast({
@@ -268,7 +267,7 @@ export default function MenuOrderPage() {
 
     checkoutMutation.mutate({
       deliveryAddress,
-      paymentMethod,
+      deliveryDate: deliveryDate || undefined,
     });
   };
 
@@ -919,13 +918,14 @@ export default function MenuOrderPage() {
                 />
               </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>결제 수단</FormLabel>
-                <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                  <option value="card">신용카드</option>
-                  <option value="cash">현금</option>
-                  <option value="transfer">계좌이체</option>
-                </Select>
+              <FormControl>
+                <FormLabel>희망 배송 일시 (선택사항)</FormLabel>
+                <Input
+                  type="datetime-local"
+                  value={deliveryDate}
+                  onChange={(e) => setDeliveryDate(e.target.value)}
+                  placeholder="배송받을 날짜와 시간을 선택하세요"
+                />
               </FormControl>
             </VStack>
           </ModalBody>

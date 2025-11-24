@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@chakra-ui/react";
 import * as authApi from "../api/auth";
 import { tokenStorage } from "../api/client";
+import { extractUserFromToken } from "../utils/jwt";
 import type {
   LoginRequest,
   RegisterRequest,
@@ -69,13 +70,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       await authApi.login(data);
 
-      // 토큰은 이미 auth.ts에서 저장됨
-      const user = {
-        email: data.email,
-        name: data.email.split("@")[0],
-      };
-      setUser(user);
-      userStorage.setUser(user); // localStorage에 사용자 정보 저장
+      // 토큰에서 사용자 정보 추출 (role 포함)
+      const token = tokenStorage.getAccessToken();
+      if (token) {
+        const userFromToken = extractUserFromToken(token);
+        if (userFromToken) {
+          setUser(userFromToken);
+          userStorage.setUser(userFromToken);
+        } else {
+          // JWT 디코딩 실패 시 기본 정보 사용
+          const user = {
+            email: data.email,
+            name: data.email.split("@")[0],
+          };
+          setUser(user);
+          userStorage.setUser(user);
+        }
+      }
 
       toast({
         title: "로그인 성공",

@@ -131,15 +131,16 @@ export interface CustomizeItemRequest {
 
 // ============= Order Types =============
 export type OrderStatus =
-  | "PENDING"
-  | "PREPARING"
-  | "DELIVERING"
-  | "COMPLETED"
-  | "CANCELLED";
+  | "CHECKING_STOCK" // 재고 확인 중
+  | "RECEIVED"        // 주문 접수 완료
+  | "IN_KITCHEN"      // 조리 중
+  | "DELIVERING"      // 배달 중
+  | "DELIVERED"       // 배달 완료
+  | "CANCELLED";      // 취소됨
 
 export interface CheckoutRequest {
-  deliveryAddress: string;
-  paymentMethod: string; // 결제 수단
+  deliveryAddress: string; // 필수
+  deliveryDate?: string; // 선택 - ISO 8601 format
 }
 
 export interface CheckoutResponse {
@@ -160,6 +161,8 @@ export interface OrderItem {
 export interface Order {
   orderId: number;
   orderDate: string; // ISO 8601 (LocalDateTime)
+  deliveryDate?: string; // ISO 8601
+  deliveryAddress: string;
   status: OrderStatus;
   totalPrice: number;
   itemCount: number; // 주문 아이템 개수
@@ -168,9 +171,9 @@ export interface Order {
 export interface OrderDetail {
   orderId: number;
   orderDate: string; // ISO 8601
-  status: OrderStatus;
+  deliveryDate?: string; // ISO 8601
   deliveryAddress: string;
-  paymentMethod: string;
+  status: OrderStatus;
   totalPrice: number;
   items: OrderItem[];
 }
@@ -186,9 +189,10 @@ export interface UpdateOrderStatusRequest {
 export interface ActiveOrder {
   orderId: number;
   customerName: string;
-  customerPhone: string; // 고객 전화번호
-  deliveryAddress: string;
+  customerEmail: string; // 고객 이메일
   orderDate: string; // ISO 8601 (LocalDateTime)
+  deliveryDate?: string; // ISO 8601
+  deliveryAddress: string;
   status: OrderStatus;
   totalPrice: number;
   itemCount: number; // 주문 아이템 개수
