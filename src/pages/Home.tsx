@@ -212,7 +212,7 @@ export default function Home() {
               fontSize="lg"
               color={useColorModeValue("gray.600", "gray.400")}
             >
-              똑간집이 제공하는 혁신적인 서비스
+              또간집이 제공하는 혁신적인 서비스
             </Text>
           </VStack>
 
