@@ -144,8 +144,10 @@ export default function StaffDashboardPage() {
     orderDetail.items.forEach((item) => {
       item.customizations.forEach((custom) => {
         const existing = requiredMap.get(custom.dishName) || { quantity: 0 };
+        // item.quantity를 곱해서 실제 필요한 수량 계산
+        const actualRequired = custom.quantity * item.quantity;
         requiredMap.set(custom.dishName, {
-          quantity: existing.quantity + custom.quantity,
+          quantity: existing.quantity + actualRequired,
         });
       });
     });
