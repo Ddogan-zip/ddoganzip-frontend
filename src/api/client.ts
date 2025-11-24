@@ -66,8 +66,8 @@ apiClient.interceptors.response.use(
             refreshToken,
           });
 
-          // SuccessResponse<TokenResponse> 형식으로 반환됨
-          const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+          // 백엔드가 TokenResponse를 직접 반환 (래퍼 없음)
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
           tokenStorage.setAccessToken(accessToken);
           tokenStorage.setRefreshToken(newRefreshToken);
 

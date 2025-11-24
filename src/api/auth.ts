@@ -18,42 +18,35 @@ export const register = async (data: RegisterRequest): Promise<void> => {
 
 // 로그인
 export const login = async (data: LoginRequest): Promise<TokenResponse> => {
-  const response = await apiClient.post<SuccessResponse<TokenResponse>>(
+  const response = await apiClient.post<TokenResponse>(
     "/api/auth/login",
     data
   );
 
-  // 디버깅: 실제 응답 구조 확인
-  console.log("=== Login Response ===");
-  console.log("Full response:", response);
-  console.log("response.data:", response.data);
-  console.log("response.data.data:", response.data.data);
-
-  // 토큰 저장 (data 필드 안에 있음)
-  if (response.data.data) {
-    tokenStorage.setAccessToken(response.data.data.accessToken);
-    tokenStorage.setRefreshToken(response.data.data.refreshToken);
-    return response.data.data;
+  // 백엔드가 TokenResponse를 직접 반환 (SuccessResponse 래퍼 없음)
+  if (response.data && response.data.accessToken && response.data.refreshToken) {
+    tokenStorage.setAccessToken(response.data.accessToken);
+    tokenStorage.setRefreshToken(response.data.refreshToken);
+    return response.data;
   }
 
-  // 응답 구조가 다를 수 있으므로 에러에 포함
-  throw new Error(`Login failed: no token received. Response: ${JSON.stringify(response.data)}`);
+  throw new Error("Login failed: no token received");
 };
 
 // 토큰 갱신
 export const refreshToken = async (
   data: RefreshRequest
 ): Promise<TokenResponse> => {
-  const response = await apiClient.post<SuccessResponse<TokenResponse>>(
+  const response = await apiClient.post<TokenResponse>(
     "/api/auth/refresh",
     data
   );
 
-  // 새 토큰 저장
-  if (response.data.data) {
-    tokenStorage.setAccessToken(response.data.data.accessToken);
-    tokenStorage.setRefreshToken(response.data.data.refreshToken);
-    return response.data.data;
+  // 백엔드가 TokenResponse를 직접 반환
+  if (response.data && response.data.accessToken && response.data.refreshToken) {
+    tokenStorage.setAccessToken(response.data.accessToken);
+    tokenStorage.setRefreshToken(response.data.refreshToken);
+    return response.data;
   }
 
   throw new Error("Token refresh failed");
