@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getActiveOrders, updateOrderStatus, getInventory } from "../api/staff";
-import type { ActiveOrder, OrderStatus, InventoryItem } from "../api/types";
+import { getOrderDetails } from "../api/orders";
+import type { ActiveOrder, OrderStatus, InventoryItem, OrderDetail } from "../api/types";
 import {
   Box,
   Heading,
@@ -38,8 +39,17 @@ import {
   Th,
   Td,
   TableContainer,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { FaBox, FaClock, FaUser, FaMapMarkerAlt, FaWarehouse } from "react-icons/fa";
+import { FaBox, FaClock, FaUser, FaMapMarkerAlt, FaWarehouse, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { useState } from "react";
 
 // 상태별 한글 이름과 색상
 const STATUS_CONFIG: Record<OrderStatus, { label: string; colorScheme: string }> = {
@@ -61,10 +71,20 @@ const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
   CANCELLED: [],
 };
 
+interface RequiredStock {
+  dishId: number;
+  dishName: string;
+  required: number;
+  available: number;
+  isInsufficient: boolean;
+}
+
 export default function StaffDashboardPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const cardBg = useColorModeValue("white", "gray.800");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   // 주문 관리
   const { data: activeOrders, isPending: isLoadingOrders } = useQuery<ActiveOrder[]>({
@@ -78,6 +98,13 @@ export default function StaffDashboardPage() {
     queryKey: ["inventory"],
     queryFn: getInventory,
     refetchInterval: 10000,
+  });
+
+  // 선택된 주문 상세 정보
+  const { data: orderDetail, isPending: isLoadingOrderDetail } = useQuery<OrderDetail>({
+    queryKey: ["order-detail", selectedOrderId],
+    queryFn: () => getOrderDetails(selectedOrderId!),
+    enabled: !!selectedOrderId && isOpen,
   });
 
   const { mutate: changeOrderStatus, isPending: isUpdatingStatus } = useMutation({
@@ -94,6 +121,7 @@ export default function StaffDashboardPage() {
         duration: 3000,
         isClosable: true,
       });
+      onClose(); // 모달 닫기
     },
     onError: (error: any) => {
       toast({
@@ -105,6 +133,59 @@ export default function StaffDashboardPage() {
       });
     },
   });
+
+  // 필요한 재고 계산
+  const calculateRequiredStock = (): RequiredStock[] => {
+    if (!orderDetail || !inventory) return [];
+
+    const requiredMap = new Map<string, { quantity: number }>();
+
+    // 모든 주문 아이템의 커스터마이징에서 필요한 재고 합산
+    orderDetail.items.forEach((item) => {
+      item.customizations.forEach((custom) => {
+        const existing = requiredMap.get(custom.dishName) || { quantity: 0 };
+        requiredMap.set(custom.dishName, {
+          quantity: existing.quantity + custom.quantity,
+        });
+      });
+    });
+
+    // 현재 재고와 비교 (dishName으로 매칭)
+    const result: RequiredStock[] = [];
+    requiredMap.forEach((value, dishName) => {
+      const inventoryItem = inventory.find((inv) => inv.dishName === dishName);
+      const available = inventoryItem?.currentStock || 0;
+      result.push({
+        dishId: inventoryItem?.dishId || 0,
+        dishName,
+        required: value.quantity,
+        available,
+        isInsufficient: available < value.quantity,
+      });
+    });
+
+    return result.sort((a, b) => (b.isInsufficient ? 1 : 0) - (a.isInsufficient ? 1 : 0));
+  };
+
+  const requiredStock = calculateRequiredStock();
+  const hasInsufficientStock = requiredStock.some((s) => s.isInsufficient);
+
+  const handleCheckStock = (orderId: number) => {
+    setSelectedOrderId(orderId);
+    onOpen();
+  };
+
+  const handleAcceptOrder = () => {
+    if (selectedOrderId) {
+      changeOrderStatus({ orderId: selectedOrderId, status: "RECEIVED" });
+    }
+  };
+
+  const handleCancelOrder = () => {
+    if (selectedOrderId) {
+      changeOrderStatus({ orderId: selectedOrderId, status: "CANCELLED" });
+    }
+  };
 
   return (
     <VStack spacing={8} align="stretch">
@@ -360,33 +441,41 @@ export default function StaffDashboardPage() {
                     <CardFooter pt={6}>
                       {nextStatuses.length > 0 ? (
                         <VStack width="100%" spacing={3}>
-                          <HStack width="100%" spacing={3}>
-                            {nextStatuses.map((nextStatus) => {
-                              const nextConfig = STATUS_CONFIG[nextStatus];
-                              return (
-                                <Button
-                                  key={nextStatus}
-                                  flex={1}
-                                  size="lg"
-                                  rounded="full"
-                                  colorScheme={nextConfig.colorScheme}
-                                  onClick={() =>
-                                    changeOrderStatus({ orderId: order.orderId, status: nextStatus })
-                                  }
-                                  isDisabled={isUpdatingStatus}
-                                >
-                                  {nextConfig.label}
-                                </Button>
-                              );
-                            })}
-                          </HStack>
                           {order.status === "CHECKING_STOCK" && (
-                            <Alert status="info" rounded="md">
-                              <AlertIcon />
-                              <Text fontSize="sm">
-                                재고를 확인한 후 주문을 접수하거나 취소하세요
-                              </Text>
-                            </Alert>
+                            <Button
+                              width="100%"
+                              size="lg"
+                              rounded="full"
+                              colorScheme="purple"
+                              variant="solid"
+                              leftIcon={<Icon as={FaWarehouse} />}
+                              onClick={() => handleCheckStock(order.orderId)}
+                              boxShadow="lg"
+                            >
+                              📦 재고 확인 및 주문 처리
+                            </Button>
+                          )}
+                          {order.status !== "CHECKING_STOCK" && (
+                            <HStack width="100%" spacing={3}>
+                              {nextStatuses.map((nextStatus) => {
+                                const nextConfig = STATUS_CONFIG[nextStatus];
+                                return (
+                                  <Button
+                                    key={nextStatus}
+                                    flex={1}
+                                    size="lg"
+                                    rounded="full"
+                                    colorScheme={nextConfig.colorScheme}
+                                    onClick={() =>
+                                      changeOrderStatus({ orderId: order.orderId, status: nextStatus })
+                                    }
+                                    isDisabled={isUpdatingStatus}
+                                  >
+                                    {nextConfig.label}
+                                  </Button>
+                                );
+                              })}
+                            </HStack>
                           )}
                         </VStack>
                       ) : (
@@ -481,6 +570,196 @@ export default function StaffDashboardPage() {
           </TabPanel>
         </TabPanels>
       </Tabs>
+
+      {/* 재고 확인 모달 */}
+      <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <HStack>
+              <Icon as={FaWarehouse} color="purple.500" />
+              <Text>주문 #{selectedOrderId} - 재고 확인</Text>
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {isLoadingOrderDetail && (
+              <Box textAlign="center" py={8}>
+                <Spinner size="lg" color="brand.500" />
+                <Text mt={4}>주문 정보를 불러오는 중...</Text>
+              </Box>
+            )}
+
+            {!isLoadingOrderDetail && orderDetail && (
+              <VStack spacing={6} align="stretch">
+                {/* 주문 정보 */}
+                <Card bg={useColorModeValue("gray.50", "gray.700")} variant="outline">
+                  <CardBody>
+                    <VStack align="stretch" spacing={2}>
+                      <HStack>
+                        <Icon as={FaUser} color="gray.500" />
+                        <Text fontWeight="bold">고객:</Text>
+                        <Text>{activeOrders?.find((o) => o.orderId === selectedOrderId)?.customerName}</Text>
+                      </HStack>
+                      <HStack>
+                        <Icon as={FaMapMarkerAlt} color="gray.500" />
+                        <Text fontWeight="bold">배송지:</Text>
+                        <Text>{orderDetail.deliveryAddress}</Text>
+                      </HStack>
+                      <HStack>
+                        <Text fontWeight="bold">총액:</Text>
+                        <Text fontSize="lg" color="green.600" fontWeight="black">
+                          {orderDetail.totalPrice.toLocaleString()}원
+                        </Text>
+                      </HStack>
+                    </VStack>
+                  </CardBody>
+                </Card>
+
+                {/* 재고 부족 경고 */}
+                {hasInsufficientStock && (
+                  <Alert status="error" variant="left-accent">
+                    <AlertIcon as={FaExclamationTriangle} />
+                    <VStack align="start" spacing={1}>
+                      <AlertTitle>재고 부족!</AlertTitle>
+                      <AlertDescription>
+                        일부 품목의 재고가 부족합니다. 주문을 취소하거나 고객에게 연락하세요.
+                      </AlertDescription>
+                    </VStack>
+                  </Alert>
+                )}
+
+                {/* 재고 비교 테이블 */}
+                <Card variant="outline">
+                  <CardHeader pb={3}>
+                    <Heading size="sm">필요 재고 vs 현재 재고</Heading>
+                  </CardHeader>
+                  <CardBody pt={0}>
+                    {requiredStock.length > 0 ? (
+                      <TableContainer>
+                        <Table size="sm" variant="simple">
+                          <Thead>
+                            <Tr>
+                              <Th>품목</Th>
+                              <Th isNumeric>필요 수량</Th>
+                              <Th isNumeric>현재 재고</Th>
+                              <Th>상태</Th>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {requiredStock.map((stock) => (
+                              <Tr
+                                key={stock.dishId}
+                                bg={stock.isInsufficient ? "red.50" : "transparent"}
+                              >
+                                <Td fontWeight="medium">{stock.dishName}</Td>
+                                <Td isNumeric fontWeight="bold" color="blue.600">
+                                  {stock.required}
+                                </Td>
+                                <Td
+                                  isNumeric
+                                  fontWeight="bold"
+                                  color={stock.isInsufficient ? "red.600" : "green.600"}
+                                >
+                                  {stock.available}
+                                </Td>
+                                <Td>
+                                  {stock.isInsufficient ? (
+                                    <Badge colorScheme="red" fontSize="xs">
+                                      <HStack spacing={1}>
+                                        <Icon as={FaExclamationTriangle} boxSize={3} />
+                                        <Text>부족 ({stock.available - stock.required})</Text>
+                                      </HStack>
+                                    </Badge>
+                                  ) : (
+                                    <Badge colorScheme="green" fontSize="xs">
+                                      <HStack spacing={1}>
+                                        <Icon as={FaCheckCircle} boxSize={3} />
+                                        <Text>충분</Text>
+                                      </HStack>
+                                    </Badge>
+                                  )}
+                                </Td>
+                              </Tr>
+                            ))}
+                          </Tbody>
+                        </Table>
+                      </TableContainer>
+                    ) : (
+                      <Alert status="info">
+                        <AlertIcon />
+                        이 주문에는 추가 재고가 필요하지 않습니다.
+                      </Alert>
+                    )}
+                  </CardBody>
+                </Card>
+
+                {/* 주문 아이템 목록 */}
+                <Card variant="outline">
+                  <CardHeader pb={3}>
+                    <Heading size="sm">주문 상세 내역</Heading>
+                  </CardHeader>
+                  <CardBody pt={0}>
+                    <VStack align="stretch" spacing={3}>
+                      {orderDetail.items.map((item, idx) => (
+                        <Box
+                          key={idx}
+                          p={3}
+                          bg={useColorModeValue("gray.50", "gray.700")}
+                          rounded="md"
+                        >
+                          <HStack justify="space-between" mb={2}>
+                            <Text fontWeight="bold">{item.dinnerName}</Text>
+                            <Text color="green.600" fontWeight="bold">
+                              {item.price.toLocaleString()}원
+                            </Text>
+                          </HStack>
+                          <Text fontSize="sm" color="gray.600">
+                            스타일: {item.servingStyleName} × {item.quantity}
+                          </Text>
+                          {item.customizations.length > 0 && (
+                            <VStack align="stretch" mt={2} pl={4} spacing={1}>
+                              {item.customizations.map((custom, cIdx) => (
+                                <Text key={cIdx} fontSize="sm" color="gray.500">
+                                  + {custom.dishName} × {custom.quantity}
+                                </Text>
+                              ))}
+                            </VStack>
+                          )}
+                        </Box>
+                      ))}
+                    </VStack>
+                  </CardBody>
+                </Card>
+              </VStack>
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <HStack width="100%" spacing={3}>
+              <Button
+                flex={1}
+                size="lg"
+                colorScheme="red"
+                onClick={handleCancelOrder}
+                isDisabled={isUpdatingStatus}
+              >
+                취소
+              </Button>
+              <Button
+                flex={1}
+                size="lg"
+                colorScheme="blue"
+                onClick={handleAcceptOrder}
+                isDisabled={isUpdatingStatus || hasInsufficientStock}
+                leftIcon={hasInsufficientStock ? undefined : <Icon as={FaCheckCircle} />}
+              >
+                {hasInsufficientStock ? "재고 부족 - 접수 불가" : "주문 접수"}
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </VStack>
   );
 }
