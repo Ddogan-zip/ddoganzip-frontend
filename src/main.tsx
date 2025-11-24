@@ -138,7 +138,7 @@ export function Layout() {
                 }}
                 transition="all 0.2s"
               >
-                🍽️ 똑간집
+                🍽️ 또간집
               </Link>
               <HStack as="nav" spacing={2} display={{ base: "none", md: "flex" }}>
                 <Link

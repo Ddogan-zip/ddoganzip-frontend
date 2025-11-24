@@ -62,7 +62,7 @@ export default function RegisterPage() {
             회원가입
           </Heading>
           <Text color={useColorModeValue("gray.600", "gray.400")}>
-            똑간집의 회원이 되어보세요
+            또간집의 회원이 되어보세요
           </Text>
         </Box>
 
