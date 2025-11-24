@@ -23,6 +23,12 @@ export const login = async (data: LoginRequest): Promise<TokenResponse> => {
     data
   );
 
+  // 디버깅: 실제 응답 구조 확인
+  console.log("=== Login Response ===");
+  console.log("Full response:", response);
+  console.log("response.data:", response.data);
+  console.log("response.data.data:", response.data.data);
+
   // 토큰 저장 (data 필드 안에 있음)
   if (response.data.data) {
     tokenStorage.setAccessToken(response.data.data.accessToken);
@@ -30,7 +36,8 @@ export const login = async (data: LoginRequest): Promise<TokenResponse> => {
     return response.data.data;
   }
 
-  throw new Error("Login failed: no token received");
+  // 응답 구조가 다를 수 있으므로 에러에 포함
+  throw new Error(`Login failed: no token received. Response: ${JSON.stringify(response.data)}`);
 };
 
 // 토큰 갱신
