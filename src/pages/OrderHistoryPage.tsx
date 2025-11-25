@@ -129,6 +129,17 @@ export default function OrderHistoryPage() {
         {orders?.map((order) => {
           const statusConfig = STATUS_CONFIG[order.status];
 
+          // 커스터마이징 가격 계산 (items가 있는 경우)
+          const customizationPrice = order.items?.reduce((sum, item) => {
+            const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+              const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+              return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+            }, 0);
+            return sum + itemCustomPrice;
+          }, 0) || 0;
+
+          const finalTotalPrice = order.totalPrice + customizationPrice;
+
           return (
             <Card
               key={order.orderId}
@@ -211,7 +222,7 @@ export default function OrderHistoryPage() {
                       {order.itemCount}개 품목
                     </Text>
                     <Text fontSize="xl" fontWeight="black" color="green.600">
-                      {order.totalPrice.toLocaleString()}원
+                      {finalTotalPrice.toLocaleString()}원
                     </Text>
                   </HStack>
                 </VStack>
