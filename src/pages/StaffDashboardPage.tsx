@@ -140,12 +140,21 @@ export default function StaffDashboardPage() {
 
     const requiredMap = new Map<string, { quantity: number }>();
 
-    // 모든 주문 아이템의 커스터마이징에서 필요한 재고 합산
+    // 모든 주문 아이템 처리
     orderDetail.items.forEach((item) => {
+      // 커스터마이징에서 필요한 재고 계산
       item.customizations.forEach((custom) => {
         const existing = requiredMap.get(custom.dishName) || { quantity: 0 };
         // item.quantity를 곱해서 실제 필요한 수량 계산
-        const actualRequired = custom.quantity * item.quantity;
+        let actualRequired = 0;
+        if (custom.action === "ADD") {
+          // ADD: 추가 수량
+          actualRequired = custom.quantity * item.quantity;
+        } else if (custom.action === "REMOVE") {
+          // REMOVE: 제거 수량 (음수로 처리)
+          actualRequired = -(custom.quantity * item.quantity);
+        }
+
         requiredMap.set(custom.dishName, {
           quantity: existing.quantity + actualRequired,
         });
@@ -155,6 +164,9 @@ export default function StaffDashboardPage() {
     // 현재 재고와 비교 (dishName으로 매칭)
     const result: RequiredStock[] = [];
     requiredMap.forEach((value, dishName) => {
+      // 0개 이하는 제외 (제거만 있는 경우)
+      if (value.quantity <= 0) return;
+
       const inventoryItem = inventory.find((inv) => inv.dishName === dishName);
       const available = inventoryItem?.currentStock || 0;
       result.push({

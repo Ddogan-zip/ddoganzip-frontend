@@ -49,6 +49,7 @@ interface BackendDinnerDetail {
     name: string;
     description: string;
     basePrice: number;
+    quantity: number; // 기본 포함 수량
   }>;
   availableStyles: Array<{
     id: number;
@@ -77,6 +78,7 @@ export const getMenuDetails = async (dinnerId: number): Promise<DinnerDetail> =>
       name: dish.name,
       description: dish.description,
       basePrice: dish.basePrice,
+      defaultQuantity: dish.quantity, // quantity → defaultQuantity 매핑
     })),
     availableStyles: data.availableStyles.map((style) => ({
       styleId: style.id,
