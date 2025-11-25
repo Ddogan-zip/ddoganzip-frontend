@@ -84,8 +84,10 @@ export interface Customization {
 
 export interface CustomizationResponse {
   action: CustomizationAction;
+  dishId: number; // 추가
   dishName: string;
   quantity: number;
+  pricePerUnit: number; // 추가
 }
 
 export interface CartItemRequest {
@@ -149,12 +151,20 @@ export interface CheckoutResponse {
   data: number; // orderId
 }
 
+export interface BaseDish {
+  dishId: number;
+  dishName: string;
+  quantity: number;
+}
+
 export interface OrderItem {
   itemId: number; // 주문 아이템 ID
+  dinnerId: number; // 추가
   dinnerName: string;
   servingStyleName: string;
   quantity: number;
   price: number; // 아이템 총 가격
+  baseDishes: BaseDish[]; // 추가: 기본 구성 품목
   customizations: CustomizationResponse[]; // 커스터마이징 목록
 }
 
