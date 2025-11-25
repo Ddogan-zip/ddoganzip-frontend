@@ -1,5 +1,4 @@
 import { apiClient } from "./client";
-import { getMenuDetails } from "./menu";
 import type { MenuItem } from "./menu";
 import type {
   CheckoutRequest,
@@ -8,48 +7,6 @@ import type {
   OrderDetail,
   OrderHistoryResponse,
 } from "./types";
-
-// 헬퍼: pricePerUnit이 없는 경우 dinner detail에서 가격 조회
-async function enrichOrderDetailWithPrices(orderDetail: OrderDetail): Promise<OrderDetail> {
-  const items = await Promise.all(
-    orderDetail.items.map(async (item) => {
-      // customization이 있고, pricePerUnit이 없거나 0인 경우
-      if (item.customizations.length > 0 &&
-          item.customizations.some(c => !c.pricePerUnit || c.pricePerUnit === 0)) {
-        try {
-          console.log(`[Order] Fetching dinner detail for dinnerId: ${item.dinnerId}`);
-          const detail = await getMenuDetails(item.dinnerId);
-
-          const updatedCustomizations = item.customizations.map(custom => {
-            if (!custom.pricePerUnit || custom.pricePerUnit === 0) {
-              const dish = detail.dishes.find(d => d.dishId === custom.dishId);
-              console.log(`[Order] Found dish ${custom.dishName} with basePrice: ${dish?.basePrice}`);
-              return {
-                ...custom,
-                pricePerUnit: dish?.basePrice || 0,
-              };
-            }
-            return custom;
-          });
-
-          return {
-            ...item,
-            customizations: updatedCustomizations,
-          };
-        } catch (error) {
-          console.error(`[Order] Failed to fetch dinner detail for ${item.dinnerName}:`, error);
-          return item;
-        }
-      }
-      return item;
-    })
-  );
-
-  return {
-    ...orderDetail,
-    items,
-  };
-}
 
 // 하위 호환성을 위해 기존 CartItem 타입 유지
 export interface CartItem extends MenuItem {
@@ -76,10 +33,7 @@ export const getOrderHistory = async (): Promise<Order[]> => {
 // 특정 주문 상세 정보 조회
 export const getOrderDetails = async (orderId: number): Promise<OrderDetail> => {
   const response = await apiClient.get<OrderDetail>(`/api/orders/${orderId}`);
-  console.log("=== Raw Order Detail API Response ===");
-  console.log(JSON.stringify(response.data, null, 2));
-
-  return enrichOrderDetailWithPrices(response.data);
+  return response.data;
 };
 
 // ============= 하위 호환성을 위한 레거시 함수들 =============
