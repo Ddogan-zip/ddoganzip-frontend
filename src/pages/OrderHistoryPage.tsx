@@ -238,6 +238,29 @@ export default function OrderHistoryPage() {
 
             {orderDetail && (
               <VStack align="stretch" spacing={4}>
+                {/* 디버깅: 가격 계산 확인 */}
+                {(() => {
+                  const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
+                    const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                      const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                      return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+                    }, 0);
+                    return sum + itemCustomPrice;
+                  }, 0);
+
+                  console.log("=== Order Price Debug ===");
+                  console.log("Backend totalPrice:", orderDetail.totalPrice);
+                  console.log("Frontend calculated customization price:", totalCustomPrice);
+                  console.log("Frontend final total:", orderDetail.totalPrice + totalCustomPrice);
+                  console.log("Items:", orderDetail.items.map(item => ({
+                    name: item.dinnerName,
+                    basePrice: item.price,
+                    customizations: item.customizations
+                  })));
+
+                  return null;
+                })()}
+
                 {/* Status */}
                 <Box textAlign="center" py={4}>
                   <Badge
