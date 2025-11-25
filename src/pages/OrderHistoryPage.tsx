@@ -129,17 +129,7 @@ export default function OrderHistoryPage() {
         {orders?.map((order) => {
           const statusConfig = STATUS_CONFIG[order.status];
 
-          // 커스터마이징 가격 계산 (items가 있는 경우)
-          const customizationPrice = order.items?.reduce((sum, item) => {
-            const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-              const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-              return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-            }, 0);
-            return sum + itemCustomPrice;
-          }, 0) || 0;
-
-          const finalTotalPrice = order.totalPrice + customizationPrice;
-
+          // 백엔드가 이미 커스터마이징 가격을 포함하므로 그대로 사용
           return (
             <Card
               key={order.orderId}
@@ -222,7 +212,7 @@ export default function OrderHistoryPage() {
                       {order.itemCount}개 품목
                     </Text>
                     <Text fontSize="xl" fontWeight="black" color="green.600">
-                      {finalTotalPrice.toLocaleString()}원
+                      {order.totalPrice.toLocaleString()}원
                     </Text>
                   </HStack>
                 </VStack>
@@ -249,29 +239,6 @@ export default function OrderHistoryPage() {
 
             {orderDetail && (
               <VStack align="stretch" spacing={4}>
-                {/* 디버깅: 가격 계산 확인 */}
-                {(() => {
-                  const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
-                    const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                      const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                      return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-                    }, 0);
-                    return sum + itemCustomPrice;
-                  }, 0);
-
-                  console.log("=== Order Price Debug ===");
-                  console.log("Backend totalPrice:", orderDetail.totalPrice);
-                  console.log("Frontend calculated customization price:", totalCustomPrice);
-                  console.log("Frontend final total:", orderDetail.totalPrice + totalCustomPrice);
-                  console.log("Items:", orderDetail.items.map(item => ({
-                    name: item.dinnerName,
-                    basePrice: item.price,
-                    customizations: item.customizations
-                  })));
-
-                  return null;
-                })()}
-
                 {/* Status */}
                 <Box textAlign="center" py={4}>
                   <Badge
@@ -320,13 +287,6 @@ export default function OrderHistoryPage() {
                   </Heading>
                   <VStack align="stretch" spacing={3}>
                     {orderDetail.items.map((item) => {
-                      // 커스터마이징 가격 계산
-                      const customPrice = item.customizations.reduce((sum, custom) => {
-                        const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                        return custom.action === "ADD" ? sum + customTotal : sum - customTotal;
-                      }, 0);
-                      const itemTotalWithCustom = (item.price || 0) + customPrice;
-
                       return (
                         <Box key={item.itemId} p={4} bg="white" border="1px" borderColor="gray.200" rounded="md">
                           <VStack align="stretch" spacing={2}>
@@ -347,7 +307,7 @@ export default function OrderHistoryPage() {
                                 </Text>
                                 <VStack align="stretch" spacing={1}>
                                   {item.customizations.map((custom, idx) => {
-                                    const customItemTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                                    const customItemTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0);
                                     return (
                                       <HStack key={idx} justify="space-between">
                                         <Text fontSize="sm">
@@ -372,7 +332,7 @@ export default function OrderHistoryPage() {
                               <Text fontSize="sm" color="gray.600">
                                 품목 금액
                               </Text>
-                              <Text fontWeight="bold">{itemTotalWithCustom.toLocaleString()}원</Text>
+                              <Text fontWeight="bold">{item.price.toLocaleString()}원</Text>
                             </HStack>
                           </VStack>
                         </Box>
@@ -388,18 +348,7 @@ export default function OrderHistoryPage() {
                     총 금액
                   </Text>
                   <Text fontSize="2xl" fontWeight="black" color="green.600">
-                    {(() => {
-                      // 모든 아이템의 커스터마이징 가격 합산
-                      const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
-                        const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                          const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                          return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-                        }, 0);
-                        return sum + itemCustomPrice;
-                      }, 0);
-                      const finalTotal = (orderDetail.totalPrice || 0) + totalCustomPrice;
-                      return finalTotal.toLocaleString();
-                    })()}원
+                    {orderDetail.totalPrice.toLocaleString()}원
                   </Text>
                 </HStack>
               </VStack>
