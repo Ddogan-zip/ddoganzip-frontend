@@ -380,17 +380,7 @@ export default function StaffDashboardPage() {
                 const statusConfig = STATUS_CONFIG[order.status];
                 const nextStatuses = NEXT_STATUSES[order.status];
 
-                // 커스터마이징 가격 계산 (items가 있는 경우)
-                const customizationPrice = order.items?.reduce((sum, item) => {
-                  const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                    const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                    return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-                  }, 0);
-                  return sum + itemCustomPrice;
-                }, 0) || 0;
-
-                const finalTotalPrice = order.totalPrice + customizationPrice;
-
+                // 백엔드가 이미 커스터마이징 가격을 포함하므로 그대로 사용
                 return (
                   <Card
                     key={order.orderId}
@@ -462,7 +452,7 @@ export default function StaffDashboardPage() {
                             {statusConfig.label}
                           </Badge>
                           <Text fontSize="xl" fontWeight="black" color="green.600">
-                            {finalTotalPrice.toLocaleString()}원
+                            {order.totalPrice.toLocaleString()}원
                           </Text>
                           <Text fontSize="sm" color="gray.500">
                             {order.itemCount}개 품목
@@ -644,18 +634,7 @@ export default function StaffDashboardPage() {
                       <HStack>
                         <Text fontWeight="bold">총액:</Text>
                         <Text fontSize="lg" color="green.600" fontWeight="black">
-                          {(() => {
-                            // 모든 아이템의 커스터마이징 가격 합산
-                            const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
-                              const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                                const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                                return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-                              }, 0);
-                              return sum + itemCustomPrice;
-                            }, 0);
-                            const finalTotal = (orderDetail.totalPrice || 0) + totalCustomPrice;
-                            return finalTotal.toLocaleString();
-                          })()}원
+                          {orderDetail.totalPrice.toLocaleString()}원
                         </Text>
                       </HStack>
                     </VStack>
@@ -748,13 +727,6 @@ export default function StaffDashboardPage() {
                   <CardBody pt={0}>
                     <VStack align="stretch" spacing={3}>
                       {orderDetail.items.map((item, idx) => {
-                        // 커스터마이징 가격 계산
-                        const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                          const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                          return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-                        }, 0);
-                        const itemTotalWithCustom = (item.price || 0) + itemCustomPrice;
-
                         return (
                           <Box
                             key={idx}
@@ -765,7 +737,7 @@ export default function StaffDashboardPage() {
                             <HStack justify="space-between" mb={2}>
                               <Text fontWeight="bold">{item.dinnerName}</Text>
                               <Text color="green.600" fontWeight="bold">
-                                {itemTotalWithCustom.toLocaleString()}원
+                                {item.price.toLocaleString()}원
                               </Text>
                             </HStack>
                             <Text fontSize="sm" color="gray.600">
@@ -793,7 +765,7 @@ export default function StaffDashboardPage() {
                                   커스터마이징:
                                 </Text>
                                 {item.customizations.map((custom, cIdx) => {
-                                  const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                                  const customItemTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0);
                                   return (
                                     <HStack key={cIdx} justify="space-between">
                                       <Text fontSize="sm" color="gray.500">
@@ -805,7 +777,7 @@ export default function StaffDashboardPage() {
                                         color={custom.action === "ADD" ? "green.600" : "red.600"}
                                       >
                                         {custom.action === "ADD" ? "+" : "-"}
-                                        {customTotal.toLocaleString()}원
+                                        {customItemTotal.toLocaleString()}원
                                       </Text>
                                     </HStack>
                                   );
