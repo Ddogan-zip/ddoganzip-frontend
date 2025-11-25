@@ -176,6 +176,7 @@ export interface Order {
   status: OrderStatus;
   totalPrice: number;
   itemCount: number; // 주문 아이템 개수
+  items?: OrderItem[]; // ⚠️ Optional: 목록 조회에서는 사용 안 함
 }
 
 export interface OrderDetail {
@@ -206,6 +207,7 @@ export interface ActiveOrder {
   status: OrderStatus;
   totalPrice: number;
   itemCount: number; // 주문 아이템 개수
+  items?: OrderItem[]; // ⚠️ Optional: 목록 조회에서는 사용 안 함
 }
 
 export interface InventoryItem {

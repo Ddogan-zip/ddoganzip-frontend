@@ -380,6 +380,17 @@ export default function StaffDashboardPage() {
                 const statusConfig = STATUS_CONFIG[order.status];
                 const nextStatuses = NEXT_STATUSES[order.status];
 
+                // 커스터마이징 가격 계산 (items가 있는 경우)
+                const customizationPrice = order.items?.reduce((sum, item) => {
+                  const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                    const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                    return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+                  }, 0);
+                  return sum + itemCustomPrice;
+                }, 0) || 0;
+
+                const finalTotalPrice = order.totalPrice + customizationPrice;
+
                 return (
                   <Card
                     key={order.orderId}
@@ -451,7 +462,7 @@ export default function StaffDashboardPage() {
                             {statusConfig.label}
                           </Badge>
                           <Text fontSize="xl" fontWeight="black" color="green.600">
-                            {order.totalPrice.toLocaleString()}원
+                            {finalTotalPrice.toLocaleString()}원
                           </Text>
                           <Text fontSize="sm" color="gray.500">
                             {order.itemCount}개 품목

@@ -129,6 +129,17 @@ export default function OrderHistoryPage() {
         {orders?.map((order) => {
           const statusConfig = STATUS_CONFIG[order.status];
 
+          // 커스터마이징 가격 계산 (items가 있는 경우)
+          const customizationPrice = order.items?.reduce((sum, item) => {
+            const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+              const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+              return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+            }, 0);
+            return sum + itemCustomPrice;
+          }, 0) || 0;
+
+          const finalTotalPrice = order.totalPrice + customizationPrice;
+
           return (
             <Card
               key={order.orderId}
@@ -211,7 +222,7 @@ export default function OrderHistoryPage() {
                       {order.itemCount}개 품목
                     </Text>
                     <Text fontSize="xl" fontWeight="black" color="green.600">
-                      {order.totalPrice.toLocaleString()}원
+                      {finalTotalPrice.toLocaleString()}원
                     </Text>
                   </HStack>
                 </VStack>
@@ -238,6 +249,29 @@ export default function OrderHistoryPage() {
 
             {orderDetail && (
               <VStack align="stretch" spacing={4}>
+                {/* 디버깅: 가격 계산 확인 */}
+                {(() => {
+                  const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
+                    const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                      const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                      return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+                    }, 0);
+                    return sum + itemCustomPrice;
+                  }, 0);
+
+                  console.log("=== Order Price Debug ===");
+                  console.log("Backend totalPrice:", orderDetail.totalPrice);
+                  console.log("Frontend calculated customization price:", totalCustomPrice);
+                  console.log("Frontend final total:", orderDetail.totalPrice + totalCustomPrice);
+                  console.log("Items:", orderDetail.items.map(item => ({
+                    name: item.dinnerName,
+                    basePrice: item.price,
+                    customizations: item.customizations
+                  })));
+
+                  return null;
+                })()}
+
                 {/* Status */}
                 <Box textAlign="center" py={4}>
                   <Badge
