@@ -142,7 +142,17 @@ export default function StaffDashboardPage() {
 
     // 모든 주문 아이템 처리
     orderDetail.items.forEach((item) => {
-      // 커스터마이징에서 필요한 재고 계산
+      // 1. 기본 구성 품목의 재고 계산
+      item.baseDishes.forEach((baseDish) => {
+        const existing = requiredMap.get(baseDish.dishName) || { quantity: 0 };
+        // 기본 수량 × 주문 수량
+        const baseRequired = baseDish.quantity * item.quantity;
+        requiredMap.set(baseDish.dishName, {
+          quantity: existing.quantity + baseRequired,
+        });
+      });
+
+      // 2. 커스터마이징에서 필요한 재고 계산
       item.customizations.forEach((custom) => {
         const existing = requiredMap.get(custom.dishName) || { quantity: 0 };
         // item.quantity를 곱해서 실제 필요한 수량 계산
@@ -731,13 +741,45 @@ export default function StaffDashboardPage() {
                           <Text fontSize="sm" color="gray.600">
                             스타일: {item.servingStyleName} × {item.quantity}
                           </Text>
-                          {item.customizations.length > 0 && (
+
+                          {/* 기본 구성 품목 */}
+                          {item.baseDishes && item.baseDishes.length > 0 && (
                             <VStack align="stretch" mt={2} pl={4} spacing={1}>
-                              {item.customizations.map((custom, cIdx) => (
-                                <Text key={cIdx} fontSize="sm" color="gray.500">
-                                  + {custom.dishName} × {custom.quantity}
+                              <Text fontSize="xs" fontWeight="bold" color="gray.600">
+                                기본 구성:
+                              </Text>
+                              {item.baseDishes.map((baseDish, bIdx) => (
+                                <Text key={bIdx} fontSize="sm" color="gray.500">
+                                  • {baseDish.dishName} × {baseDish.quantity}
                                 </Text>
                               ))}
+                            </VStack>
+                          )}
+
+                          {/* 커스터마이징 */}
+                          {item.customizations.length > 0 && (
+                            <VStack align="stretch" mt={2} pl={4} spacing={1}>
+                              <Text fontSize="xs" fontWeight="bold" color="gray.600">
+                                커스터마이징:
+                              </Text>
+                              {item.customizations.map((custom, cIdx) => {
+                                const customTotal = custom.quantity * custom.pricePerUnit;
+                                return (
+                                  <HStack key={cIdx} justify="space-between">
+                                    <Text fontSize="sm" color="gray.500">
+                                      {custom.action === "ADD" ? "+" : "-"} {custom.dishName} × {custom.quantity}
+                                    </Text>
+                                    <Text
+                                      fontSize="sm"
+                                      fontWeight="medium"
+                                      color={custom.action === "ADD" ? "green.600" : "red.600"}
+                                    >
+                                      {custom.action === "ADD" ? "+" : "-"}
+                                      {customTotal.toLocaleString()}원
+                                    </Text>
+                                  </HStack>
+                                );
+                              })}
                             </VStack>
                           )}
                         </Box>
