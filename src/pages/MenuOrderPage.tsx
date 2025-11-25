@@ -306,6 +306,30 @@ export default function MenuOrderPage() {
     resetTranscript,
   } = useSpeechRecognition();
 
+  // 장바구니 데이터 디버깅
+  useEffect(() => {
+    if (cartData) {
+      console.log("=== Cart Data Debug ===");
+      console.log("Total items:", cartData.items.length);
+      console.log("Total price from backend:", cartData.totalPrice);
+      cartData.items.forEach((item, idx) => {
+        console.log(`Item ${idx}:`, item.dinnerName);
+        console.log(`  itemTotalPrice:`, item.itemTotalPrice);
+        console.log(`  quantity:`, item.quantity);
+        console.log(`  customizations:`, item.customizations);
+        item.customizations.forEach((custom, cIdx) => {
+          console.log(`    Custom ${cIdx}:`, {
+            action: custom.action,
+            dishName: custom.dishName,
+            quantity: custom.quantity,
+            pricePerUnit: custom.pricePerUnit,
+            dishId: custom.dishId,
+          });
+        });
+      });
+    }
+  }, [cartData]);
+
   // 마운트 시 음성 인식 시작 / 언마운트 시 정리
   useEffect(() => {
     SpeechRecognition.startListening({ continuous: true, language: "ko-KR" });
@@ -583,7 +607,7 @@ export default function MenuOrderPage() {
                         {item.customizations.length > 0 && (
                           <VStack align="start" spacing={1} mb={2}>
                             {item.customizations.map((custom, idx) => {
-                              const customTotal = custom.quantity * custom.pricePerUnit * item.quantity;
+                              const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
                               return (
                                 <HStack key={idx} justify="space-between" width="100%">
                                   <Text fontSize="xs" color="blue.600">
@@ -635,10 +659,10 @@ export default function MenuOrderPage() {
                             {(() => {
                               // 커스터마이징 가격 계산
                               const customPrice = item.customizations.reduce((sum, custom) => {
-                                const customTotal = custom.quantity * custom.pricePerUnit * item.quantity;
+                                const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
                                 return custom.action === "ADD" ? sum + customTotal : sum - customTotal;
                               }, 0);
-                              const totalWithCustom = item.itemTotalPrice + customPrice;
+                              const totalWithCustom = (item.itemTotalPrice || 0) + customPrice;
                               return totalWithCustom.toLocaleString();
                             })()}원
                           </Text>
@@ -655,12 +679,12 @@ export default function MenuOrderPage() {
                           // 모든 아이템의 커스터마이징 가격 합산
                           const totalCustomPrice = cartItems.reduce((sum, item) => {
                             const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                              const customTotal = custom.quantity * custom.pricePerUnit * item.quantity;
+                              const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
                               return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
                             }, 0);
                             return sum + itemCustomPrice;
                           }, 0);
-                          const finalTotal = totalPrice + totalCustomPrice;
+                          const finalTotal = (totalPrice || 0) + totalCustomPrice;
                           return finalTotal.toLocaleString();
                         })()}원
                       </Text>
@@ -1008,10 +1032,10 @@ export default function MenuOrderPage() {
                   {cartItems.map((item) => {
                     // 커스터마이징 가격 계산
                     const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                      const customTotal = custom.quantity * custom.pricePerUnit * item.quantity;
+                      const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
                       return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
                     }, 0);
-                    const itemTotalWithCustom = item.itemTotalPrice + itemCustomPrice;
+                    const itemTotalWithCustom = (item.itemTotalPrice || 0) + itemCustomPrice;
 
                     return (
                       <HStack key={item.itemId} justify="space-between" p={2} bg="gray.50" rounded="md">
@@ -1038,12 +1062,12 @@ export default function MenuOrderPage() {
                         // 모든 아이템의 커스터마이징 가격 합산
                         const totalCustomPrice = cartItems.reduce((sum, item) => {
                           const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                            const customTotal = custom.quantity * custom.pricePerUnit * item.quantity;
+                            const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
                             return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
                           }, 0);
                           return sum + itemCustomPrice;
                         }, 0);
-                        const finalTotal = totalPrice + totalCustomPrice;
+                        const finalTotal = (totalPrice || 0) + totalCustomPrice;
                         return finalTotal.toLocaleString();
                       })()}원
                     </Text>
