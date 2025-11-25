@@ -270,21 +270,30 @@ export default function MenuOrderPage() {
     });
   };
 
-  // 커스터마이징 수량 변경
-  const handleCustomizationQuantityChange = (dishId: number, quantity: number) => {
+  // 커스터마이징 수량 변경 (기본 수량 기준)
+  const handleCustomizationQuantityChange = (dishId: number, currentQuantity: number, defaultQuantity: number) => {
     setCustomizations((prev) => {
       const newMap = new Map(prev);
-      if (quantity === 0) {
-        // 수량이 0이면 제거
+
+      if (currentQuantity === defaultQuantity) {
+        // 기본 수량과 같으면 커스터마이징 없음
         newMap.delete(dishId);
-      } else {
-        // 수량이 1 이상이면 추가/업데이트
+      } else if (currentQuantity > defaultQuantity) {
+        // 기본 수량보다 많으면 ADD
         newMap.set(dishId, {
           action: "ADD",
           dishId,
-          quantity,
+          quantity: currentQuantity - defaultQuantity,
+        });
+      } else if (currentQuantity < defaultQuantity) {
+        // 기본 수량보다 적으면 REMOVE (0 포함)
+        newMap.set(dishId, {
+          action: "REMOVE",
+          dishId,
+          quantity: defaultQuantity - currentQuantity,
         });
       }
+
       return newMap;
     });
   };
@@ -816,45 +825,92 @@ export default function MenuOrderPage() {
                 </FormControl>
 
                 <Box>
-                  <FormLabel fontWeight="bold">커스터마이징 (선택사항)</FormLabel>
+                  <FormLabel fontWeight="bold">구성 품목 수량 조절</FormLabel>
                   <Text fontSize="sm" color="gray.600" mb={2}>
-                    추가하고 싶은 요리와 수량을 선택하세요
+                    기본 수량에서 추가하거나 제거할 수 있습니다
                   </Text>
                   <VStack align="stretch" spacing={3}>
                     {selectedDinner.dishes.map((dish) => {
-                      const currentQty = customizations.get(dish.dishId)?.quantity || 0;
+                      const customization = customizations.get(dish.dishId);
+                      const defaultQty = dish.defaultQuantity;
+                      // 실제 표시되는 수량 = 기본 수량 + (ADD) - (REMOVE)
+                      let displayQty = defaultQty;
+                      if (customization) {
+                        if (customization.action === "ADD") {
+                          displayQty = defaultQty + customization.quantity;
+                        } else if (customization.action === "REMOVE") {
+                          displayQty = defaultQty - customization.quantity;
+                        }
+                      }
+
+                      const isModified = displayQty !== defaultQty;
+                      const priceChange = (displayQty - defaultQty) * dish.basePrice;
+
                       return (
                         <HStack
                           key={dish.dishId}
                           p={3}
-                          bg={currentQty > 0 ? "brand.50" : "gray.50"}
+                          bg={isModified ? "brand.50" : "gray.50"}
+                          border={isModified ? "2px" : "1px"}
+                          borderColor={isModified ? "brand.400" : "gray.200"}
                           rounded="md"
                           justify="space-between"
                         >
                           <VStack align="start" spacing={0} flex={1}>
-                            <Text fontWeight="medium">{dish.name}</Text>
+                            <HStack>
+                              <Text fontWeight="medium">{dish.name}</Text>
+                              <Badge colorScheme="blue" fontSize="xs">
+                                기본 {defaultQty}개
+                              </Badge>
+                            </HStack>
                             <Text fontSize="sm" color="gray.600">
-                              +{dish.basePrice.toLocaleString()}원
+                              {dish.basePrice.toLocaleString()}원/개
                             </Text>
+                            {isModified && (
+                              <Text
+                                fontSize="sm"
+                                fontWeight="bold"
+                                color={priceChange > 0 ? "green.600" : "red.600"}
+                              >
+                                {priceChange > 0 ? "+" : ""}
+                                {priceChange.toLocaleString()}원
+                              </Text>
+                            )}
                           </VStack>
                           <HStack spacing={2}>
                             <IconButton
                               aria-label="감소"
                               icon={<FaMinus />}
                               size="sm"
-                              onClick={() => handleCustomizationQuantityChange(dish.dishId, Math.max(0, currentQty - 1))}
-                              isDisabled={currentQty === 0}
-                              colorScheme={currentQty > 0 ? "brand" : "gray"}
+                              onClick={() =>
+                                handleCustomizationQuantityChange(
+                                  dish.dishId,
+                                  Math.max(0, displayQty - 1),
+                                  defaultQty
+                                )
+                              }
+                              isDisabled={displayQty === 0}
+                              colorScheme={displayQty < defaultQty ? "red" : "gray"}
                             />
-                            <Text fontWeight="bold" minW="30px" textAlign="center">
-                              {currentQty}
-                            </Text>
+                            <VStack spacing={0}>
+                              <Text fontWeight="bold" minW="30px" textAlign="center">
+                                {displayQty}
+                              </Text>
+                              {isModified && (
+                                <Text fontSize="xs" color="gray.500">
+                                  ({displayQty > defaultQty ? "+" : ""}
+                                  {displayQty - defaultQty})
+                                </Text>
+                              )}
+                            </VStack>
                             <IconButton
                               aria-label="증가"
                               icon={<FaPlus />}
                               size="sm"
-                              onClick={() => handleCustomizationQuantityChange(dish.dishId, currentQty + 1)}
-                              colorScheme="brand"
+                              onClick={() =>
+                                handleCustomizationQuantityChange(dish.dishId, displayQty + 1, defaultQty)
+                              }
+                              colorScheme={displayQty > defaultQty ? "green" : "brand"}
                             />
                           </HStack>
                         </HStack>
@@ -872,10 +928,13 @@ export default function MenuOrderPage() {
                         const stylePrice = selectedDinner.availableStyles.find(
                           (s) => s.styleId.toString() === selectedStyleId
                         )?.additionalPrice || 0;
+                        // 커스터마이징 가격 계산: ADD는 +, REMOVE는 -
                         const customPrice = Array.from(customizations.values()).reduce(
                           (sum, c) => {
                             const dish = selectedDinner.dishes.find((d) => d.dishId === c.dishId);
-                            return sum + (dish?.basePrice || 0) * c.quantity;
+                            const dishPrice = (dish?.basePrice || 0) * c.quantity;
+                            // ADD면 가격 추가, REMOVE면 가격 감소
+                            return c.action === "ADD" ? sum + dishPrice : sum - dishPrice;
                           },
                           0
                         );

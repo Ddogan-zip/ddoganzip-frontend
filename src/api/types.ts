@@ -45,7 +45,7 @@ export interface Dish {
   name: string;
   description: string;
   basePrice: number;
-  defaultQuantity?: number; // 백엔드에서 제공하지 않음, 선택사항으로 변경
+  defaultQuantity: number; // 기본 포함 수량 (백엔드 quantity 필드)
 }
 
 export interface ServingStyle {
