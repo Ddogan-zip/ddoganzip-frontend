@@ -285,41 +285,65 @@ export default function OrderHistoryPage() {
                     주문 내역
                   </Heading>
                   <VStack align="stretch" spacing={3}>
-                    {orderDetail.items.map((item) => (
-                      <Box key={item.itemId} p={4} bg="white" border="1px" borderColor="gray.200" rounded="md">
-                        <VStack align="stretch" spacing={2}>
-                          <HStack justify="space-between">
-                            <VStack align="start" spacing={0}>
-                              <Text fontWeight="bold">{item.dinnerName}</Text>
-                              <Text fontSize="sm" color="gray.600">
-                                {item.servingStyleName} 스타일
-                              </Text>
-                            </VStack>
-                            <Text fontWeight="bold">x{item.quantity}</Text>
-                          </HStack>
+                    {orderDetail.items.map((item) => {
+                      // 커스터마이징 가격 계산
+                      const customPrice = item.customizations.reduce((sum, custom) => {
+                        const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                        return custom.action === "ADD" ? sum + customTotal : sum - customTotal;
+                      }, 0);
+                      const itemTotalWithCustom = (item.price || 0) + customPrice;
 
-                          {item.customizations && item.customizations.length > 0 && (
-                            <Box pl={4} borderLeft="2px" borderColor="brand.500">
-                              <Text fontSize="sm" color="gray.600" mb={1}>
-                                커스터마이징:
-                              </Text>
-                              {item.customizations.map((custom, idx) => (
-                                <Text key={idx} fontSize="sm">
-                                  • {custom.dishName} x{custom.quantity}
+                      return (
+                        <Box key={item.itemId} p={4} bg="white" border="1px" borderColor="gray.200" rounded="md">
+                          <VStack align="stretch" spacing={2}>
+                            <HStack justify="space-between">
+                              <VStack align="start" spacing={0}>
+                                <Text fontWeight="bold">{item.dinnerName}</Text>
+                                <Text fontSize="sm" color="gray.600">
+                                  {item.servingStyleName} 스타일
                                 </Text>
-                              ))}
-                            </Box>
-                          )}
+                              </VStack>
+                              <Text fontWeight="bold">x{item.quantity}</Text>
+                            </HStack>
 
-                          <HStack justify="space-between">
-                            <Text fontSize="sm" color="gray.600">
-                              품목 금액
-                            </Text>
-                            <Text fontWeight="bold">{item.price.toLocaleString()}원</Text>
-                          </HStack>
-                        </VStack>
-                      </Box>
-                    ))}
+                            {item.customizations && item.customizations.length > 0 && (
+                              <Box pl={4} borderLeft="2px" borderColor="brand.500">
+                                <Text fontSize="sm" color="gray.600" mb={1}>
+                                  커스터마이징:
+                                </Text>
+                                <VStack align="stretch" spacing={1}>
+                                  {item.customizations.map((custom, idx) => {
+                                    const customItemTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                                    return (
+                                      <HStack key={idx} justify="space-between">
+                                        <Text fontSize="sm">
+                                          • {custom.action === "ADD" ? "+" : "-"} {custom.dishName} x{custom.quantity}
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="bold"
+                                          color={custom.action === "ADD" ? "green.600" : "red.600"}
+                                        >
+                                          {custom.action === "ADD" ? "+" : "-"}
+                                          {customItemTotal.toLocaleString()}원
+                                        </Text>
+                                      </HStack>
+                                    );
+                                  })}
+                                </VStack>
+                              </Box>
+                            )}
+
+                            <HStack justify="space-between">
+                              <Text fontSize="sm" color="gray.600">
+                                품목 금액
+                              </Text>
+                              <Text fontWeight="bold">{itemTotalWithCustom.toLocaleString()}원</Text>
+                            </HStack>
+                          </VStack>
+                        </Box>
+                      );
+                    })}
                   </VStack>
                 </Box>
 
@@ -330,7 +354,18 @@ export default function OrderHistoryPage() {
                     총 금액
                   </Text>
                   <Text fontSize="2xl" fontWeight="black" color="green.600">
-                    {orderDetail.totalPrice.toLocaleString()}원
+                    {(() => {
+                      // 모든 아이템의 커스터마이징 가격 합산
+                      const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
+                        const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                          const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                          return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+                        }, 0);
+                        return sum + itemCustomPrice;
+                      }, 0);
+                      const finalTotal = (orderDetail.totalPrice || 0) + totalCustomPrice;
+                      return finalTotal.toLocaleString();
+                    })()}원
                   </Text>
                 </HStack>
               </VStack>

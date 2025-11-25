@@ -633,7 +633,18 @@ export default function StaffDashboardPage() {
                       <HStack>
                         <Text fontWeight="bold">총액:</Text>
                         <Text fontSize="lg" color="green.600" fontWeight="black">
-                          {orderDetail.totalPrice.toLocaleString()}원
+                          {(() => {
+                            // 모든 아이템의 커스터마이징 가격 합산
+                            const totalCustomPrice = orderDetail.items.reduce((sum, item) => {
+                              const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                                const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                                return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+                              }, 0);
+                              return sum + itemCustomPrice;
+                            }, 0);
+                            const finalTotal = (orderDetail.totalPrice || 0) + totalCustomPrice;
+                            return finalTotal.toLocaleString();
+                          })()}원
                         </Text>
                       </HStack>
                     </VStack>
@@ -725,65 +736,74 @@ export default function StaffDashboardPage() {
                   </CardHeader>
                   <CardBody pt={0}>
                     <VStack align="stretch" spacing={3}>
-                      {orderDetail.items.map((item, idx) => (
-                        <Box
-                          key={idx}
-                          p={3}
-                          bg={useColorModeValue("gray.50", "gray.700")}
-                          rounded="md"
-                        >
-                          <HStack justify="space-between" mb={2}>
-                            <Text fontWeight="bold">{item.dinnerName}</Text>
-                            <Text color="green.600" fontWeight="bold">
-                              {item.price.toLocaleString()}원
+                      {orderDetail.items.map((item, idx) => {
+                        // 커스터마이징 가격 계산
+                        const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                          const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                          return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
+                        }, 0);
+                        const itemTotalWithCustom = (item.price || 0) + itemCustomPrice;
+
+                        return (
+                          <Box
+                            key={idx}
+                            p={3}
+                            bg={useColorModeValue("gray.50", "gray.700")}
+                            rounded="md"
+                          >
+                            <HStack justify="space-between" mb={2}>
+                              <Text fontWeight="bold">{item.dinnerName}</Text>
+                              <Text color="green.600" fontWeight="bold">
+                                {itemTotalWithCustom.toLocaleString()}원
+                              </Text>
+                            </HStack>
+                            <Text fontSize="sm" color="gray.600">
+                              스타일: {item.servingStyleName} × {item.quantity}
                             </Text>
-                          </HStack>
-                          <Text fontSize="sm" color="gray.600">
-                            스타일: {item.servingStyleName} × {item.quantity}
-                          </Text>
 
-                          {/* 기본 구성 품목 */}
-                          {item.baseDishes && item.baseDishes.length > 0 && (
-                            <VStack align="stretch" mt={2} pl={4} spacing={1}>
-                              <Text fontSize="xs" fontWeight="bold" color="gray.600">
-                                기본 구성:
-                              </Text>
-                              {item.baseDishes.map((baseDish, bIdx) => (
-                                <Text key={bIdx} fontSize="sm" color="gray.500">
-                                  • {baseDish.dishName} × {baseDish.quantity}
+                            {/* 기본 구성 품목 */}
+                            {item.baseDishes && item.baseDishes.length > 0 && (
+                              <VStack align="stretch" mt={2} pl={4} spacing={1}>
+                                <Text fontSize="xs" fontWeight="bold" color="gray.600">
+                                  기본 구성:
                                 </Text>
-                              ))}
-                            </VStack>
-                          )}
+                                {item.baseDishes.map((baseDish, bIdx) => (
+                                  <Text key={bIdx} fontSize="sm" color="gray.500">
+                                    • {baseDish.dishName} × {baseDish.quantity}
+                                  </Text>
+                                ))}
+                              </VStack>
+                            )}
 
-                          {/* 커스터마이징 */}
-                          {item.customizations.length > 0 && (
-                            <VStack align="stretch" mt={2} pl={4} spacing={1}>
-                              <Text fontSize="xs" fontWeight="bold" color="gray.600">
-                                커스터마이징:
-                              </Text>
-                              {item.customizations.map((custom, cIdx) => {
-                                const customTotal = custom.quantity * custom.pricePerUnit;
-                                return (
-                                  <HStack key={cIdx} justify="space-between">
-                                    <Text fontSize="sm" color="gray.500">
-                                      {custom.action === "ADD" ? "+" : "-"} {custom.dishName} × {custom.quantity}
-                                    </Text>
-                                    <Text
-                                      fontSize="sm"
-                                      fontWeight="medium"
-                                      color={custom.action === "ADD" ? "green.600" : "red.600"}
-                                    >
-                                      {custom.action === "ADD" ? "+" : "-"}
-                                      {customTotal.toLocaleString()}원
-                                    </Text>
-                                  </HStack>
-                                );
-                              })}
-                            </VStack>
-                          )}
-                        </Box>
-                      ))}
+                            {/* 커스터마이징 */}
+                            {item.customizations.length > 0 && (
+                              <VStack align="stretch" mt={2} pl={4} spacing={1}>
+                                <Text fontSize="xs" fontWeight="bold" color="gray.600">
+                                  커스터마이징:
+                                </Text>
+                                {item.customizations.map((custom, cIdx) => {
+                                  const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                                  return (
+                                    <HStack key={cIdx} justify="space-between">
+                                      <Text fontSize="sm" color="gray.500">
+                                        {custom.action === "ADD" ? "+" : "-"} {custom.dishName} × {custom.quantity}
+                                      </Text>
+                                      <Text
+                                        fontSize="sm"
+                                        fontWeight="medium"
+                                        color={custom.action === "ADD" ? "green.600" : "red.600"}
+                                      >
+                                        {custom.action === "ADD" ? "+" : "-"}
+                                        {customTotal.toLocaleString()}원
+                                      </Text>
+                                    </HStack>
+                                  );
+                                })}
+                              </VStack>
+                            )}
+                          </Box>
+                        );
+                      })}
                     </VStack>
                   </CardBody>
                 </Card>
