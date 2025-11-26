@@ -171,7 +171,8 @@ export interface OrderItem {
 export interface Order {
   orderId: number;
   orderDate: string; // ISO 8601 (LocalDateTime)
-  deliveryDate?: string; // ISO 8601
+  deliveryDate?: string; // ISO 8601 (예정 시각)
+  deliveredAt?: string; // ISO 8601 (실제 배달 완료 시각)
   deliveryAddress: string;
   status: OrderStatus;
   totalPrice: number;
@@ -182,7 +183,8 @@ export interface Order {
 export interface OrderDetail {
   orderId: number;
   orderDate: string; // ISO 8601
-  deliveryDate?: string; // ISO 8601
+  deliveryDate?: string; // ISO 8601 (예정 시각)
+  deliveredAt?: string; // ISO 8601 (실제 배달 완료 시각)
   deliveryAddress: string;
   status: OrderStatus;
   totalPrice: number;
@@ -202,7 +204,8 @@ export interface ActiveOrder {
   customerName: string;
   customerEmail: string; // 고객 이메일
   orderDate: string; // ISO 8601 (LocalDateTime)
-  deliveryDate?: string; // ISO 8601
+  deliveryDate?: string; // ISO 8601 (예정 시각)
+  deliveredAt?: string; // ISO 8601 (실제 배달 완료 시각)
   deliveryAddress: string;
   status: OrderStatus;
   totalPrice: number;
