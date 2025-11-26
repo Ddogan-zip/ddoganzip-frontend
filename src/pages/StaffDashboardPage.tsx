@@ -437,6 +437,15 @@ export default function StaffDashboardPage() {
                                 </Text>
                               </HStack>
                             )}
+
+                            {order.deliveredAt && (
+                              <HStack>
+                                <Icon as={FaCheckCircle} color="green.500" />
+                                <Text fontWeight="bold" color="green.600">
+                                  배달 완료: {new Date(order.deliveredAt).toLocaleString("ko-KR")}
+                                </Text>
+                              </HStack>
+                            )}
                           </VStack>
                         </VStack>
 
@@ -631,6 +640,20 @@ export default function StaffDashboardPage() {
                         <Text fontWeight="bold">배송지:</Text>
                         <Text>{orderDetail.deliveryAddress}</Text>
                       </HStack>
+                      {orderDetail.deliveryDate && (
+                        <HStack>
+                          <Icon as={FaClock} color="orange.500" />
+                          <Text fontWeight="bold">희망 배송:</Text>
+                          <Text>{new Date(orderDetail.deliveryDate).toLocaleString("ko-KR")}</Text>
+                        </HStack>
+                      )}
+                      {orderDetail.deliveredAt && (
+                        <HStack>
+                          <Icon as={FaCheckCircle} color="green.500" />
+                          <Text fontWeight="bold" color="green.600">배달 완료:</Text>
+                          <Text color="green.600">{new Date(orderDetail.deliveredAt).toLocaleString("ko-KR")}</Text>
+                        </HStack>
+                      )}
                       <HStack>
                         <Text fontWeight="bold">총액:</Text>
                         <Text fontSize="lg" color="green.600" fontWeight="black">

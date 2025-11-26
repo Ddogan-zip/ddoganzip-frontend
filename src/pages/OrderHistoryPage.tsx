@@ -205,6 +205,15 @@ export default function OrderHistoryPage() {
                     </HStack>
                   )}
 
+                  {order.deliveredAt && (
+                    <HStack>
+                      <Icon as={FaCheck} color="green.500" />
+                      <Text fontSize="sm" fontWeight="bold" color="green.600">
+                        배달 완료: {new Date(order.deliveredAt).toLocaleString("ko-KR")}
+                      </Text>
+                    </HStack>
+                  )}
+
                   <Divider />
 
                   <HStack justify="space-between">
@@ -267,6 +276,15 @@ export default function OrderHistoryPage() {
                         <Icon as={FaClock} color="orange.500" />
                         <Text fontSize="sm" fontWeight="medium">
                           희망 배송: {new Date(orderDetail.deliveryDate).toLocaleString("ko-KR")}
+                        </Text>
+                      </HStack>
+                    )}
+
+                    {orderDetail.deliveredAt && (
+                      <HStack>
+                        <Icon as={FaCheck} color="green.500" />
+                        <Text fontSize="sm" fontWeight="bold" color="green.600">
+                          배달 완료: {new Date(orderDetail.deliveredAt).toLocaleString("ko-KR")}
                         </Text>
                       </HStack>
                     )}
