@@ -41,6 +41,6 @@ export const getStaffAvailability = async (): Promise<StaffAvailabilityResponse>
 };
 
 // 배달 직원 복귀 (직원 전용)
-export const driverReturn = async (): Promise<void> => {
-  await apiClient.post("/api/staff/drivers/return");
+export const driverReturn = async (orderId: number): Promise<void> => {
+  await apiClient.post(`/api/staff/orders/${orderId}/driver-return`);
 };

@@ -145,7 +145,7 @@ export default function StaffDashboardPage() {
   });
 
   const { mutate: returnDriver, isPending: isReturningDriver } = useMutation({
-    mutationFn: driverReturn,
+    mutationFn: (orderId: number) => driverReturn(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-availability"] });
       queryClient.invalidateQueries({ queryKey: ["active-orders"] });
@@ -602,7 +602,7 @@ export default function StaffDashboardPage() {
                           colorScheme="blue"
                           variant="solid"
                           leftIcon={<Icon as={FaTruck} />}
-                          onClick={() => returnDriver()}
+                          onClick={() => returnDriver(order.orderId)}
                           isDisabled={isReturningDriver}
                           boxShadow="lg"
                         >
