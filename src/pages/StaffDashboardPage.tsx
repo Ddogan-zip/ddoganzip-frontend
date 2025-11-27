@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getActiveOrders, updateOrderStatus, getInventory } from "../api/staff";
+import { getActiveOrders, updateOrderStatus, getInventory, getStaffAvailability, driverReturn } from "../api/staff";
 import { getOrderDetails } from "../api/orders";
-import type { ActiveOrder, OrderStatus, InventoryItem, OrderDetail } from "../api/types";
+import type { ActiveOrder, OrderStatus, InventoryItem, OrderDetail, StaffAvailabilityResponse } from "../api/types";
 import {
   Box,
   Heading,
@@ -48,7 +48,7 @@ import {
   ModalCloseButton,
   useDisclosure,
 } from "@chakra-ui/react";
-import { FaBox, FaClock, FaUser, FaMapMarkerAlt, FaWarehouse, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { FaBox, FaClock, FaUser, FaMapMarkerAlt, FaWarehouse, FaCheckCircle, FaExclamationTriangle, FaUtensils, FaTruck } from "react-icons/fa";
 import { useState } from "react";
 
 // 상태별 한글 이름과 색상
@@ -56,6 +56,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; colorScheme: string }>
   CHECKING_STOCK: { label: "재고 확인 중", colorScheme: "yellow" },
   RECEIVED: { label: "주문 접수", colorScheme: "blue" },
   IN_KITCHEN: { label: "조리 중", colorScheme: "purple" },
+  COOKED: { label: "조리 완료", colorScheme: "teal" },
   DELIVERING: { label: "배달 중", colorScheme: "orange" },
   DELIVERED: { label: "배달 완료", colorScheme: "green" },
   CANCELLED: { label: "취소됨", colorScheme: "red" },
@@ -65,7 +66,8 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; colorScheme: string }>
 const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
   CHECKING_STOCK: ["RECEIVED", "CANCELLED"],
   RECEIVED: ["IN_KITCHEN", "CANCELLED"],
-  IN_KITCHEN: ["DELIVERING", "CANCELLED"],
+  IN_KITCHEN: ["COOKED", "CANCELLED"],
+  COOKED: ["DELIVERING", "CANCELLED"],
   DELIVERING: ["DELIVERED", "CANCELLED"],
   DELIVERED: [],
   CANCELLED: [],
@@ -100,6 +102,13 @@ export default function StaffDashboardPage() {
     refetchInterval: 10000,
   });
 
+  // 직원 가용성
+  const { data: staffAvailability, isPending: isLoadingStaff } = useQuery<StaffAvailabilityResponse>({
+    queryKey: ["staff-availability"],
+    queryFn: getStaffAvailability,
+    refetchInterval: 5000,
+  });
+
   // 선택된 주문 상세 정보
   const { data: orderDetail, isPending: isLoadingOrderDetail } = useQuery<OrderDetail>({
     queryKey: ["order-detail", selectedOrderId],
@@ -112,6 +121,7 @@ export default function StaffDashboardPage() {
       updateOrderStatus(orderId, { status }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["active-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["staff-availability"] });
       toast({
         title: "주문 상태 변경 완료",
         description: `주문 #${variables.orderId}의 상태가 "${
@@ -126,6 +136,30 @@ export default function StaffDashboardPage() {
     onError: (error: any) => {
       toast({
         title: "상태 변경 실패",
+        description: error.response?.data?.error?.message || error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+  });
+
+  const { mutate: returnDriver, isPending: isReturningDriver } = useMutation({
+    mutationFn: driverReturn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff-availability"] });
+      queryClient.invalidateQueries({ queryKey: ["active-orders"] });
+      toast({
+        title: "복귀 완료",
+        description: "배달 직원이 복귀했습니다.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "복귀 실패",
         description: error.response?.data?.error?.message || error.message,
         status: "error",
         duration: 3000,
@@ -244,7 +278,7 @@ export default function StaffDashboardPage() {
       </Box>
 
       {/* Stats */}
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} spacing={6}>
         <Card
           bg={cardBg}
           shadow="xl"
@@ -314,6 +348,54 @@ export default function StaffDashboardPage() {
                   </Badge>
                 )}
               </StatNumber>
+            </Stat>
+          </CardBody>
+        </Card>
+        <Card
+          bg={cardBg}
+          shadow="xl"
+          borderWidth="2px"
+          borderColor={staffAvailability?.canStartCooking ? "purple.400" : "red.400"}
+          rounded="2xl"
+        >
+          <CardBody>
+            <Stat>
+              <StatLabel fontSize="md" fontWeight="medium">
+                <HStack>
+                  <Icon as={FaUtensils} />
+                  <Text>요리 직원</Text>
+                </HStack>
+              </StatLabel>
+              <StatNumber fontSize="3xl" fontWeight="black" color={staffAvailability?.canStartCooking ? "purple.600" : "red.600"}>
+                {staffAvailability?.availableCooks || 0} / {staffAvailability?.totalCooks || 0}
+              </StatNumber>
+              <Text fontSize="xs" color="gray.600" mt={1}>
+                {staffAvailability?.canStartCooking ? "조리 가능" : "대기 중"}
+              </Text>
+            </Stat>
+          </CardBody>
+        </Card>
+        <Card
+          bg={cardBg}
+          shadow="xl"
+          borderWidth="2px"
+          borderColor={staffAvailability?.canStartDelivery ? "orange.400" : "red.400"}
+          rounded="2xl"
+        >
+          <CardBody>
+            <Stat>
+              <StatLabel fontSize="md" fontWeight="medium">
+                <HStack>
+                  <Icon as={FaTruck} />
+                  <Text>배달 직원</Text>
+                </HStack>
+              </StatLabel>
+              <StatNumber fontSize="3xl" fontWeight="black" color={staffAvailability?.canStartDelivery ? "orange.600" : "red.600"}>
+                {staffAvailability?.availableDrivers || 0} / {staffAvailability?.totalDrivers || 0}
+              </StatNumber>
+              <Text fontSize="xs" color="gray.600" mt={1}>
+                {staffAvailability?.canStartDelivery ? "배달 가능" : "대기 중"}
+              </Text>
             </Stat>
           </CardBody>
         </Card>
@@ -512,6 +594,20 @@ export default function StaffDashboardPage() {
                             </HStack>
                           )}
                         </VStack>
+                      ) : order.status === "DELIVERED" ? (
+                        <Button
+                          width="100%"
+                          size="lg"
+                          rounded="full"
+                          colorScheme="blue"
+                          variant="solid"
+                          leftIcon={<Icon as={FaTruck} />}
+                          onClick={() => returnDriver()}
+                          isDisabled={isReturningDriver}
+                          boxShadow="lg"
+                        >
+                          🚗 배달 직원 복귀
+                        </Button>
                       ) : (
                         <Text color="gray.500" textAlign="center" width="100%">
                           이 주문은 완료되었습니다.

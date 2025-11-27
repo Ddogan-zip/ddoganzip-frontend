@@ -35,6 +35,7 @@ const STATUS_CONFIG: Record<string, { label: string; colorScheme: string; icon: 
   CHECKING_STOCK: { label: "재고 확인 중", colorScheme: "yellow", icon: FaClock },
   RECEIVED: { label: "주문 접수", colorScheme: "blue", icon: FaShoppingBag },
   IN_KITCHEN: { label: "조리 중", colorScheme: "purple", icon: FaBox },
+  COOKED: { label: "조리 완료", colorScheme: "teal", icon: FaCheck },
   DELIVERING: { label: "배달 중", colorScheme: "orange", icon: FaMapMarkerAlt },
   DELIVERED: { label: "배달 완료", colorScheme: "green", icon: FaCheck },
   CANCELLED: { label: "취소됨", colorScheme: "red", icon: FaBox },
