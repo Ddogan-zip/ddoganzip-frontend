@@ -136,6 +136,7 @@ export type OrderStatus =
   | "CHECKING_STOCK" // 재고 확인 중
   | "RECEIVED"        // 주문 접수 완료
   | "IN_KITCHEN"      // 조리 중
+  | "COOKED"          // 조리 완료
   | "DELIVERING"      // 배달 중
   | "DELIVERED"       // 배달 완료
   | "CANCELLED";      // 취소됨
@@ -197,6 +198,15 @@ export type OrderHistoryResponse = Order[];
 // ============= Staff Types =============
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
+}
+
+export interface StaffAvailabilityResponse {
+  availableCooks: number;      // 현재 가용 요리 담당
+  totalCooks: number;          // 총 요리 담당
+  availableDrivers: number;    // 현재 가용 배달 담당
+  totalDrivers: number;        // 총 배달 담당
+  canStartCooking: boolean;    // 조리 시작 가능 여부
+  canStartDelivery: boolean;   // 배달 시작 가능 여부
 }
 
 export interface ActiveOrder {

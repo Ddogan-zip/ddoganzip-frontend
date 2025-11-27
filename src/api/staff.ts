@@ -5,6 +5,7 @@ import type {
   ActiveOrdersResponse,
   UpdateOrderStatusRequest,
   InventoryItem,
+  StaffAvailabilityResponse,
 } from "./types";
 
 // 배달 완료되지 않은 모든 주문 조회 (직원 전용)
@@ -31,4 +32,15 @@ export const updateOrderStatus = async (
 export const getInventory = async (): Promise<InventoryItem[]> => {
   const response = await apiClient.get<InventoryItem[]>("/api/staff/inventory");
   return response.data;
+};
+
+// 직원 가용성 조회 (직원 전용)
+export const getStaffAvailability = async (): Promise<StaffAvailabilityResponse> => {
+  const response = await apiClient.get<StaffAvailabilityResponse>("/api/staff/availability");
+  return response.data;
+};
+
+// 배달 직원 복귀 (직원 전용)
+export const driverReturn = async (): Promise<void> => {
+  await apiClient.post("/api/staff/drivers/return");
 };
