@@ -38,6 +38,7 @@ const STATUS_CONFIG: Record<string, { label: string; colorScheme: string; icon: 
   COOKED: { label: "조리 완료", colorScheme: "teal", icon: FaCheck },
   DELIVERING: { label: "배달 중", colorScheme: "orange", icon: FaMapMarkerAlt },
   DELIVERED: { label: "배달 완료", colorScheme: "green", icon: FaCheck },
+  DRIVER_RETURNED: { label: "배달 완료", colorScheme: "green", icon: FaCheck },
   CANCELLED: { label: "취소됨", colorScheme: "red", icon: FaBox },
 };
 
