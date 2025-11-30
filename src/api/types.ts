@@ -133,13 +133,26 @@ export interface CustomizeItemRequest {
 
 // ============= Order Types =============
 export type OrderStatus =
-  | "CHECKING_STOCK" // 재고 확인 중
-  | "RECEIVED"        // 주문 접수 완료
-  | "IN_KITCHEN"      // 조리 중
-  | "COOKED"          // 조리 완료
-  | "DELIVERING"      // 배달 중
-  | "DELIVERED"       // 배달 완료
-  | "CANCELLED";      // 취소됨
+  | "CHECKING_STOCK"   // 재고 확인 중
+  | "RECEIVED"         // 주문 접수 완료
+  | "IN_KITCHEN"       // 조리 중
+  | "COOKED"           // 조리 완료
+  | "DELIVERING"       // 배달 중
+  | "DELIVERED"        // 배달 완료
+  | "DRIVER_RETURNED"  // 배달 완료 (기사 복귀)
+  | "CANCELLED";       // 취소됨
+
+// 회원 등급
+export type MemberGrade = "NORMAL" | "BRONZE" | "SILVER" | "GOLD" | "VIP";
+
+// 등급별 정보
+export const MEMBER_GRADE_CONFIG: Record<MemberGrade, { label: string; discountPercent: number; colorScheme: string }> = {
+  NORMAL: { label: "일반", discountPercent: 0, colorScheme: "gray" },
+  BRONZE: { label: "브론즈", discountPercent: 5, colorScheme: "orange" },
+  SILVER: { label: "실버", discountPercent: 8, colorScheme: "gray" },
+  GOLD: { label: "골드", discountPercent: 11, colorScheme: "yellow" },
+  VIP: { label: "VIP", discountPercent: 15, colorScheme: "purple" },
+};
 
 export interface CheckoutRequest {
   deliveryAddress: string; // 필수
@@ -176,7 +189,11 @@ export interface Order {
   deliveredAt?: string; // ISO 8601 (실제 배달 완료 시각)
   deliveryAddress: string;
   status: OrderStatus;
-  totalPrice: number;
+  originalPrice: number; // 할인 전 원가
+  appliedGrade: MemberGrade; // 주문 시 적용된 등급
+  discountPercent: number; // 적용된 할인율 (%)
+  discountAmount: number; // 할인 금액 (원)
+  totalPrice: number; // 최종 결제 금액
   itemCount: number; // 주문 아이템 개수
   items?: OrderItem[]; // ⚠️ Optional: 목록 조회에서는 사용 안 함
 }
@@ -188,7 +205,11 @@ export interface OrderDetail {
   deliveredAt?: string; // ISO 8601 (실제 배달 완료 시각)
   deliveryAddress: string;
   status: OrderStatus;
-  totalPrice: number;
+  originalPrice: number; // 할인 전 원가
+  appliedGrade: MemberGrade; // 주문 시 적용된 등급
+  discountPercent: number; // 적용된 할인율 (%)
+  discountAmount: number; // 할인 금액 (원)
+  totalPrice: number; // 최종 결제 금액
   items: OrderItem[];
 }
 

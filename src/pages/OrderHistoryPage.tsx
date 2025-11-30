@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getOrderHistory, getOrderDetails } from "../api/orders";
 import type { Order, OrderDetail } from "../api/types";
+import { MEMBER_GRADE_CONFIG } from "../api/types";
 import {
   Box,
   Heading,
@@ -27,7 +28,7 @@ import {
   useDisclosure,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { FaBox, FaClock, FaMapMarkerAlt, FaShoppingBag, FaCheck } from "react-icons/fa";
+import { FaBox, FaClock, FaMapMarkerAlt, FaShoppingBag, FaCheck, FaTag } from "react-icons/fa";
 import { useState } from "react";
 
 // 상태별 한글 이름과 색상
@@ -218,13 +219,38 @@ export default function OrderHistoryPage() {
 
                   <Divider />
 
+                  {/* 할인 정보 */}
+                  {order.discountAmount > 0 && (
+                    <HStack justify="space-between" bg="purple.50" p={2} rounded="md">
+                      <HStack>
+                        <Icon as={FaTag} color="purple.500" />
+                        <Badge colorScheme={MEMBER_GRADE_CONFIG[order.appliedGrade].colorScheme}>
+                          {MEMBER_GRADE_CONFIG[order.appliedGrade].label}
+                        </Badge>
+                        <Text fontSize="sm" color="purple.600">
+                          {order.discountPercent}% 할인
+                        </Text>
+                      </HStack>
+                      <Text fontSize="sm" fontWeight="bold" color="purple.600">
+                        -{order.discountAmount.toLocaleString()}원
+                      </Text>
+                    </HStack>
+                  )}
+
                   <HStack justify="space-between">
                     <Text fontSize="sm" color="gray.600">
                       {order.itemCount}개 품목
                     </Text>
-                    <Text fontSize="xl" fontWeight="black" color="green.600">
-                      {order.totalPrice.toLocaleString()}원
-                    </Text>
+                    <VStack align="end" spacing={0}>
+                      {order.discountAmount > 0 && (
+                        <Text fontSize="sm" color="gray.400" textDecoration="line-through">
+                          {order.originalPrice.toLocaleString()}원
+                        </Text>
+                      )}
+                      <Text fontSize="xl" fontWeight="black" color="green.600">
+                        {order.totalPrice.toLocaleString()}원
+                      </Text>
+                    </VStack>
                   </HStack>
                 </VStack>
               </CardBody>
@@ -363,14 +389,37 @@ export default function OrderHistoryPage() {
 
                 {/* Total */}
                 <Divider />
-                <HStack justify="space-between" p={4} bg="green.50" rounded="md">
-                  <Text fontSize="lg" fontWeight="bold">
-                    총 금액
-                  </Text>
-                  <Text fontSize="2xl" fontWeight="black" color="green.600">
-                    {orderDetail.totalPrice.toLocaleString()}원
-                  </Text>
-                </HStack>
+                <Box p={4} bg="gray.50" rounded="md">
+                  <VStack align="stretch" spacing={2}>
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" color="gray.600">상품 금액</Text>
+                      <Text fontSize="sm">{orderDetail.originalPrice.toLocaleString()}원</Text>
+                    </HStack>
+
+                    {orderDetail.discountAmount > 0 && (
+                      <HStack justify="space-between">
+                        <HStack>
+                          <Icon as={FaTag} color="purple.500" boxSize={3} />
+                          <Text fontSize="sm" color="purple.600">
+                            {MEMBER_GRADE_CONFIG[orderDetail.appliedGrade].label} 할인 ({orderDetail.discountPercent}%)
+                          </Text>
+                        </HStack>
+                        <Text fontSize="sm" fontWeight="bold" color="purple.600">
+                          -{orderDetail.discountAmount.toLocaleString()}원
+                        </Text>
+                      </HStack>
+                    )}
+
+                    <Divider />
+
+                    <HStack justify="space-between">
+                      <Text fontSize="lg" fontWeight="bold">최종 결제 금액</Text>
+                      <Text fontSize="2xl" fontWeight="black" color="green.600">
+                        {orderDetail.totalPrice.toLocaleString()}원
+                      </Text>
+                    </HStack>
+                  </VStack>
+                </Box>
               </VStack>
             )}
           </ModalBody>
