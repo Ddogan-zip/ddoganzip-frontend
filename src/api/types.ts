@@ -39,6 +39,29 @@ export interface RefreshRequest {
   refreshToken: string;
 }
 
+// 회원 등급
+export type MemberGrade = "NORMAL" | "BRONZE" | "SILVER" | "GOLD" | "VIP";
+
+// 등급별 정보
+export const MEMBER_GRADE_CONFIG: Record<MemberGrade, { label: string; discountPercent: number; colorScheme: string }> = {
+  NORMAL: { label: "일반", discountPercent: 0, colorScheme: "gray" },
+  BRONZE: { label: "브론즈", discountPercent: 5, colorScheme: "orange" },
+  SILVER: { label: "실버", discountPercent: 8, colorScheme: "gray" },
+  GOLD: { label: "골드", discountPercent: 11, colorScheme: "yellow" },
+  VIP: { label: "VIP", discountPercent: 15, colorScheme: "purple" },
+};
+
+// 사용자 프로필 (회원 등급 정보 포함)
+export interface UserProfile {
+  id: number;
+  email: string;
+  name: string;
+  address: string;
+  phone: string;
+  memberGrade: MemberGrade;
+  orderCount: number;
+}
+
 // ============= Menu Types =============
 export interface Dish {
   dishId: number;
@@ -141,18 +164,6 @@ export type OrderStatus =
   | "DELIVERED"        // 배달 완료
   | "DRIVER_RETURNED"  // 배달 완료 (기사 복귀)
   | "CANCELLED";       // 취소됨
-
-// 회원 등급
-export type MemberGrade = "NORMAL" | "BRONZE" | "SILVER" | "GOLD" | "VIP";
-
-// 등급별 정보
-export const MEMBER_GRADE_CONFIG: Record<MemberGrade, { label: string; discountPercent: number; colorScheme: string }> = {
-  NORMAL: { label: "일반", discountPercent: 0, colorScheme: "gray" },
-  BRONZE: { label: "브론즈", discountPercent: 5, colorScheme: "orange" },
-  SILVER: { label: "실버", discountPercent: 8, colorScheme: "gray" },
-  GOLD: { label: "골드", discountPercent: 11, colorScheme: "yellow" },
-  VIP: { label: "VIP", discountPercent: 15, colorScheme: "purple" },
-};
 
 export interface CheckoutRequest {
   deliveryAddress: string; // 필수

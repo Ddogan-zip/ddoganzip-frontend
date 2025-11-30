@@ -6,7 +6,9 @@ import SpeechRecognition, {
 import { getMenuList, getMenuDetails } from "../api/menu";
 import { getCart, addCartItem, updateCartItemQuantity, removeCartItem } from "../api/cart";
 import { checkout } from "../api/orders";
+import { getUserProfile } from "../api/auth";
 import type { DinnerMenuItem, DinnerDetail, Customization, CartItemRequest } from "../api/types";
+import { MEMBER_GRADE_CONFIG } from "../api/types";
 import type { VoiceCommand } from "../api/voice";
 import { processVoiceCommand } from "../api/voice";
 import {
@@ -55,6 +57,8 @@ import {
   FaPlus,
   FaMinus,
   FaInfoCircle,
+  FaTag,
+  FaCrown,
 } from "react-icons/fa";
 
 export default function MenuOrderPage() {
@@ -71,6 +75,12 @@ export default function MenuOrderPage() {
   const { data: cartData, isPending: isCartLoading } = useQuery({
     queryKey: ["cart"],
     queryFn: getCart,
+  });
+
+  // 사용자 프로필 조회 (회원 등급 정보)
+  const { data: userProfile } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: getUserProfile,
   });
 
   // 모달 상태
@@ -670,25 +680,76 @@ export default function MenuOrderPage() {
                       </Box>
                     ))}
                     <Divider />
-                    <HStack justify="space-between" p={2}>
-                      <Text fontSize="lg" fontWeight="bold">
-                        총 금액:
-                      </Text>
-                      <Text fontSize="xl" fontWeight="bold" color="green.500">
-                        {(() => {
-                          // 모든 아이템의 커스터마이징 가격 합산
-                          const totalCustomPrice = cartItems.reduce((sum, item) => {
-                            const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
-                              const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
-                              return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
-                            }, 0);
-                            return sum + itemCustomPrice;
+
+                    {/* 회원 등급 할인 정보 */}
+                    {userProfile && (
+                      <Box p={3} bg="purple.50" rounded="md">
+                        <HStack justify="space-between" mb={2}>
+                          <HStack>
+                            <Icon as={FaCrown} color="purple.500" />
+                            <Badge colorScheme={MEMBER_GRADE_CONFIG[userProfile.memberGrade].colorScheme} fontSize="sm">
+                              {MEMBER_GRADE_CONFIG[userProfile.memberGrade].label}
+                            </Badge>
+                          </HStack>
+                          {MEMBER_GRADE_CONFIG[userProfile.memberGrade].discountPercent > 0 && (
+                            <Badge colorScheme="purple" fontSize="sm">
+                              {MEMBER_GRADE_CONFIG[userProfile.memberGrade].discountPercent}% 할인
+                            </Badge>
+                          )}
+                        </HStack>
+                        {MEMBER_GRADE_CONFIG[userProfile.memberGrade].discountPercent > 0 && (
+                          <Text fontSize="xs" color="purple.600">
+                            주문 시 회원 등급 할인이 자동 적용됩니다
+                          </Text>
+                        )}
+                      </Box>
+                    )}
+
+                    <VStack align="stretch" spacing={1} p={2}>
+                      {(() => {
+                        // 모든 아이템의 커스터마이징 가격 합산
+                        const totalCustomPrice = cartItems.reduce((sum, item) => {
+                          const itemCustomPrice = item.customizations.reduce((customSum, custom) => {
+                            const customTotal = (custom.quantity || 0) * (custom.pricePerUnit || 0) * (item.quantity || 1);
+                            return custom.action === "ADD" ? customSum + customTotal : customSum - customTotal;
                           }, 0);
-                          const finalTotal = (totalPrice || 0) + totalCustomPrice;
-                          return finalTotal.toLocaleString();
-                        })()}원
-                      </Text>
-                    </HStack>
+                          return sum + itemCustomPrice;
+                        }, 0);
+                        const originalTotal = (totalPrice || 0) + totalCustomPrice;
+                        const discountPercent = userProfile ? MEMBER_GRADE_CONFIG[userProfile.memberGrade].discountPercent : 0;
+                        const discountAmount = Math.floor(originalTotal * discountPercent / 100);
+                        const finalTotal = originalTotal - discountAmount;
+
+                        return (
+                          <>
+                            <HStack justify="space-between">
+                              <Text fontSize="sm" color="gray.600">상품 금액</Text>
+                              <Text fontSize="sm">{originalTotal.toLocaleString()}원</Text>
+                            </HStack>
+                            {discountAmount > 0 && (
+                              <HStack justify="space-between">
+                                <HStack>
+                                  <Icon as={FaTag} color="purple.500" boxSize={3} />
+                                  <Text fontSize="sm" color="purple.600">
+                                    등급 할인 ({discountPercent}%)
+                                  </Text>
+                                </HStack>
+                                <Text fontSize="sm" fontWeight="bold" color="purple.600">
+                                  -{discountAmount.toLocaleString()}원
+                                </Text>
+                              </HStack>
+                            )}
+                            <Divider />
+                            <HStack justify="space-between">
+                              <Text fontSize="lg" fontWeight="bold">예상 결제 금액</Text>
+                              <Text fontSize="xl" fontWeight="bold" color="green.500">
+                                {finalTotal.toLocaleString()}원
+                              </Text>
+                            </HStack>
+                          </>
+                        );
+                      })()}
+                    </VStack>
                   </VStack>
                 )}
               </CardBody>
@@ -1055,9 +1116,10 @@ export default function MenuOrderPage() {
                     );
                   })}
                   <Divider />
-                  <HStack justify="space-between" p={2}>
-                    <Text fontSize="lg" fontWeight="bold">총 금액:</Text>
-                    <Text fontSize="2xl" fontWeight="black" color="green.600">
+
+                  {/* 결제 금액 상세 */}
+                  <Box p={3} bg="gray.50" rounded="md">
+                    <VStack align="stretch" spacing={2}>
                       {(() => {
                         // 모든 아이템의 커스터마이징 가격 합산
                         const totalCustomPrice = cartItems.reduce((sum, item) => {
@@ -1067,11 +1129,45 @@ export default function MenuOrderPage() {
                           }, 0);
                           return sum + itemCustomPrice;
                         }, 0);
-                        const finalTotal = (totalPrice || 0) + totalCustomPrice;
-                        return finalTotal.toLocaleString();
-                      })()}원
-                    </Text>
-                  </HStack>
+                        const originalTotal = (totalPrice || 0) + totalCustomPrice;
+                        const discountPercent = userProfile ? MEMBER_GRADE_CONFIG[userProfile.memberGrade].discountPercent : 0;
+                        const discountAmount = Math.floor(originalTotal * discountPercent / 100);
+                        const finalTotal = originalTotal - discountAmount;
+
+                        return (
+                          <>
+                            <HStack justify="space-between">
+                              <Text fontSize="sm" color="gray.600">상품 금액</Text>
+                              <Text fontSize="sm">{originalTotal.toLocaleString()}원</Text>
+                            </HStack>
+
+                            {userProfile && discountAmount > 0 && (
+                              <HStack justify="space-between">
+                                <HStack>
+                                  <Icon as={FaTag} color="purple.500" boxSize={3} />
+                                  <Text fontSize="sm" color="purple.600">
+                                    {MEMBER_GRADE_CONFIG[userProfile.memberGrade].label} 할인 ({discountPercent}%)
+                                  </Text>
+                                </HStack>
+                                <Text fontSize="sm" fontWeight="bold" color="purple.600">
+                                  -{discountAmount.toLocaleString()}원
+                                </Text>
+                              </HStack>
+                            )}
+
+                            <Divider />
+
+                            <HStack justify="space-between">
+                              <Text fontSize="lg" fontWeight="bold">최종 결제 금액</Text>
+                              <Text fontSize="2xl" fontWeight="black" color="green.600">
+                                {finalTotal.toLocaleString()}원
+                              </Text>
+                            </HStack>
+                          </>
+                        );
+                      })()}
+                    </VStack>
+                  </Box>
                 </VStack>
               </Box>
 

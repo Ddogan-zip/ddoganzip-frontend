@@ -5,6 +5,7 @@ import type {
   TokenResponse,
   RefreshRequest,
   SuccessResponse,
+  UserProfile,
 } from "./types";
 
 // 회원가입
@@ -65,4 +66,10 @@ export const logout = async (): Promise<void> => {
 // 현재 로그인 상태 확인
 export const isAuthenticated = (): boolean => {
   return !!tokenStorage.getAccessToken();
+};
+
+// 현재 사용자 프로필 조회 (회원 등급 정보 포함)
+export const getUserProfile = async (): Promise<UserProfile> => {
+  const response = await apiClient.get<UserProfile>("/api/auth/me");
+  return response.data;
 };
