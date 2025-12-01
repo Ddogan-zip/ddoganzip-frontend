@@ -11,6 +11,7 @@ import type { DinnerMenuItem, DinnerDetail, Customization, CartItemRequest } fro
 import { MEMBER_GRADE_CONFIG } from "../api/types";
 import type { VoiceCommand } from "../api/voice";
 import { processVoiceCommand } from "../api/voice";
+import VoiceOrderModal from "../components/VoiceOrderModal";
 import {
   Box,
   Button,
@@ -86,6 +87,10 @@ export default function MenuOrderPage() {
   // 모달 상태
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
   const { isOpen: isCheckoutOpen, onOpen: onCheckoutOpen, onClose: onCheckoutClose } = useDisclosure();
+  const { isOpen: isVoiceOrderOpen, onOpen: onVoiceOrderOpen, onClose: onVoiceOrderClose } = useDisclosure();
+
+  // 메뉴 상세 정보 캐시 (음성 주문용)
+  const [menuDetailsCache, setMenuDetailsCache] = useState<Map<number, DinnerDetail>>(new Map());
 
   // 선택된 메뉴 상세 정보
   const [selectedDinner, setSelectedDinner] = useState<DinnerDetail | null>(null);
@@ -110,6 +115,8 @@ export default function MenuOrderPage() {
     try {
       const details = await getMenuDetails(dinner.dinnerId);
       setSelectedDinner(details);
+      // 캐시에 저장 (음성 주문용)
+      setMenuDetailsCache((prev) => new Map(prev).set(dinner.dinnerId, details));
       // 기본값 설정
       if (details.availableStyles.length > 0) {
         setSelectedStyleId(details.availableStyles[0].styleId.toString());
@@ -128,6 +135,47 @@ export default function MenuOrderPage() {
     } finally {
       setIsLoadingDetails(false);
     }
+  };
+
+  // 음성 주문 시작 시 모든 메뉴 상세 정보 로드
+  const handleVoiceOrderOpen = async () => {
+    if (!menuItems) return;
+
+    // 모든 메뉴 상세 정보를 미리 로드
+    const cache = new Map<number, DinnerDetail>();
+    for (const item of menuItems) {
+      if (!menuDetailsCache.has(item.dinnerId)) {
+        try {
+          const details = await getMenuDetails(item.dinnerId);
+          cache.set(item.dinnerId, details);
+        } catch (error) {
+          console.error(`메뉴 ${item.name} 상세 조회 실패:`, error);
+        }
+      } else {
+        cache.set(item.dinnerId, menuDetailsCache.get(item.dinnerId)!);
+      }
+    }
+    setMenuDetailsCache(cache);
+    onVoiceOrderOpen();
+  };
+
+  // 음성 주문 완료 처리
+  const handleVoiceOrderComplete = (orderRequest: CartItemRequest, deliveryDate?: string) => {
+    addToCartMutation.mutate(orderRequest, {
+      onSuccess: () => {
+        toast({
+          title: "음성 주문 완료",
+          description: "장바구니에 추가되었습니다. 주문을 확정해주세요.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        // 배송일이 지정된 경우 저장
+        if (deliveryDate) {
+          setDeliveryDate(deliveryDate);
+        }
+      },
+    });
   };
 
   // 장바구니에 추가
@@ -441,22 +489,46 @@ export default function MenuOrderPage() {
           rounded="2xl"
           shadow="md"
         >
-          <Heading
-            as="h1"
-            size="xl"
-            mb={2}
-            bgGradient="linear(to-r, brand.500, purple.500)"
-            bgClip="text"
-          >
-            🎤 메뉴 주문
-          </Heading>
-          <Text
-            color={useColorModeValue("gray.700", "gray.300")}
-            fontSize="lg"
-            fontWeight="medium"
-          >
-            음성으로 간편하게 주문하거나, 메뉴를 직접 선택하세요
-          </Text>
+          <HStack justify="space-between" align="start">
+            <Box>
+              <Heading
+                as="h1"
+                size="xl"
+                mb={2}
+                bgGradient="linear(to-r, brand.500, purple.500)"
+                bgClip="text"
+              >
+                메뉴 주문
+              </Heading>
+              <Text
+                color={useColorModeValue("gray.700", "gray.300")}
+                fontSize="lg"
+                fontWeight="medium"
+              >
+                음성으로 간편하게 주문하거나, 메뉴를 직접 선택하세요
+              </Text>
+            </Box>
+            <Button
+              size="lg"
+              colorScheme="green"
+              leftIcon={<FaMicrophone />}
+              onClick={handleVoiceOrderOpen}
+              isDisabled={!menuItems || menuItems.length === 0}
+              px={8}
+              py={6}
+              fontSize="lg"
+              fontWeight="bold"
+              rounded="xl"
+              shadow="lg"
+              _hover={{
+                transform: "translateY(-2px)",
+                shadow: "xl",
+              }}
+              transition="all 0.2s"
+            >
+              음성 주문
+            </Button>
+          </HStack>
         </Box>
 
         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
@@ -1205,6 +1277,16 @@ export default function MenuOrderPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* 음성 주문 모달 */}
+      <VoiceOrderModal
+        isOpen={isVoiceOrderOpen}
+        onClose={onVoiceOrderClose}
+        customerName={userProfile?.name || "고객"}
+        menuItems={menuItems || []}
+        menuDetails={menuDetailsCache}
+        onOrderComplete={handleVoiceOrderComplete}
+      />
     </>
   );
 }
