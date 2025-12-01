@@ -89,6 +89,21 @@ export default function MenuOrderPage() {
   const { isOpen: isCheckoutOpen, onOpen: onCheckoutOpen, onClose: onCheckoutClose } = useDisclosure();
   const { isOpen: isVoiceOrderOpen, onOpen: onVoiceOrderOpen, onClose: onVoiceOrderClose } = useDisclosure();
 
+  // 색상 모드 값들 (훅은 반드시 컴포넌트 최상위에서 호출)
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const headerBgGradient = useColorModeValue(
+    "linear(to-r, brand.50, purple.50)",
+    "linear(to-r, gray.800, gray.700)"
+  );
+  const textColor = useColorModeValue("gray.700", "gray.300");
+  const micOnBg = useColorModeValue("green.50", "green.900");
+  const micOffBg = useColorModeValue("gray.100", "gray.700");
+  const transcriptBg = useColorModeValue("blue.50", "blue.900");
+  const emptyCartTextColor = useColorModeValue("gray.600", "gray.400");
+  const cartItemBg = useColorModeValue("gray.50", "gray.700");
+  const menuLoadingTextColor = useColorModeValue("gray.600", "gray.400");
+
   // 메뉴 상세 정보 캐시 (음성 주문용)
   const [menuDetailsCache, setMenuDetailsCache] = useState<Map<number, DinnerDetail>>(new Map());
 
@@ -470,9 +485,6 @@ export default function MenuOrderPage() {
     );
   }
 
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-
   const cartItems = cartData?.items || [];
   const totalPrice = cartData?.totalPrice || 0;
 
@@ -481,10 +493,7 @@ export default function MenuOrderPage() {
       <VStack spacing={8} align="stretch">
         {/* Header */}
         <Box
-          bgGradient={useColorModeValue(
-            "linear(to-r, brand.50, purple.50)",
-            "linear(to-r, gray.800, gray.700)"
-          )}
+          bgGradient={headerBgGradient}
           p={8}
           rounded="2xl"
           shadow="md"
@@ -501,7 +510,7 @@ export default function MenuOrderPage() {
                 메뉴 주문
               </Heading>
               <Text
-                color={useColorModeValue("gray.700", "gray.300")}
+                color={textColor}
                 fontSize="lg"
                 fontWeight="medium"
               >
@@ -565,11 +574,7 @@ export default function MenuOrderPage() {
                 <VStack align="stretch" spacing={4}>
                   <HStack
                     p={3}
-                    bg={
-                      listening
-                        ? useColorModeValue("green.50", "green.900")
-                        : useColorModeValue("gray.100", "gray.700")
-                    }
+                    bg={listening ? micOnBg : micOffBg}
                     rounded="md"
                     justify="space-between"
                   >
@@ -582,7 +587,7 @@ export default function MenuOrderPage() {
                   {transcript && (
                     <Box
                       p={4}
-                      bg={useColorModeValue("blue.50", "blue.900")}
+                      bg={transcriptBg}
                       rounded="md"
                     >
                       <Text fontSize="sm" color="gray.600" mb={1}>
@@ -657,7 +662,7 @@ export default function MenuOrderPage() {
                       boxSize={12}
                       color="gray.300"
                     />
-                    <Text color={useColorModeValue("gray.600", "gray.400")}>
+                    <Text color={emptyCartTextColor}>
                       장바구니가 비어있습니다
                     </Text>
                   </VStack>
@@ -667,7 +672,7 @@ export default function MenuOrderPage() {
                       <Box
                         key={item.itemId}
                         p={3}
-                        bg={useColorModeValue("gray.50", "gray.700")}
+                        bg={cartItemBg}
                         rounded="md"
                       >
                         <HStack justify="space-between" mb={2}>
@@ -854,7 +859,7 @@ export default function MenuOrderPage() {
             {isMenuLoading ? (
               <VStack py={12}>
                 <Spinner size="xl" color="brand.500" thickness="4px" />
-                <Text color={useColorModeValue("gray.600", "gray.400")}>
+                <Text color={menuLoadingTextColor}>
                   메뉴를 불러오는 중...
                 </Text>
               </VStack>
