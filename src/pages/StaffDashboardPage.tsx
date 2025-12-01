@@ -59,6 +59,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; colorScheme: string }>
   COOKED: { label: "조리 완료", colorScheme: "teal" },
   DELIVERING: { label: "배달 중", colorScheme: "orange" },
   DELIVERED: { label: "배달 완료", colorScheme: "green" },
+  DRIVER_RETURNED: { label: "기사 복귀", colorScheme: "cyan" },
   CANCELLED: { label: "취소됨", colorScheme: "red" },
 };
 
@@ -69,7 +70,8 @@ const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
   IN_KITCHEN: ["COOKED", "CANCELLED"],
   COOKED: ["DELIVERING", "CANCELLED"],
   DELIVERING: ["DELIVERED", "CANCELLED"],
-  DELIVERED: [],
+  DELIVERED: ["DRIVER_RETURNED"],
+  DRIVER_RETURNED: [],
   CANCELLED: [],
 };
 
@@ -103,7 +105,7 @@ export default function StaffDashboardPage() {
   });
 
   // 직원 가용성
-  const { data: staffAvailability, isPending: isLoadingStaff } = useQuery<StaffAvailabilityResponse>({
+  const { data: staffAvailability } = useQuery<StaffAvailabilityResponse>({
     queryKey: ["staff-availability"],
     queryFn: getStaffAvailability,
     refetchInterval: 5000,
