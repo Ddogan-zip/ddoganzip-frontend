@@ -2,7 +2,10 @@
 import type { DinnerMenuItem, DinnerDetail } from "./types";
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+// 개발 환경에서는 Vite 프록시를 통해 CORS 우회
+const GROQ_API_URL = import.meta.env.DEV
+  ? "/groq-api/openai/v1/chat/completions"
+  : "https://api.groq.com/openai/v1/chat/completions";
 
 // 대화 메시지 타입
 export interface ChatMessage {
