@@ -7,6 +7,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": { target: "http://localhost:8080", changeOrigin: true }, // 개발용
+      "/groq-api": {
+        target: "https://api.groq.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/groq-api/, ""),
+        secure: true,
+      },
     },
   },
 });

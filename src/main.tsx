@@ -105,13 +105,18 @@ function ColorModeToggle() {
 export function Layout() {
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
+
+  // 모든 useColorModeValue 훅을 컴포넌트 상단에서 호출
   const bgColor = useColorModeValue("rgba(255, 255, 255, 0.8)", "rgba(26, 32, 44, 0.8)");
   const borderColor = useColorModeValue("gray.200", "gray.700");
+  const pageBgColor = useColorModeValue("gray.50", "gray.900");
+  const navLinkColor = useColorModeValue("gray.700", "gray.200");
+  const navLinkHoverBg = useColorModeValue("gray.100", "gray.700");
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Box minH="100vh" bg={useColorModeValue("gray.50", "gray.900")}>
+    <Box minH="100vh" bg={pageBgColor}>
       <Box
         as="nav"
         bg={bgColor}
@@ -149,11 +154,11 @@ export function Layout() {
                   py={2}
                   rounded="full"
                   fontWeight={isActive("/") ? "semibold" : "medium"}
-                  color={isActive("/") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  color={isActive("/") ? "white" : navLinkColor}
                   bg={isActive("/") ? "brand.500" : "transparent"}
                   _hover={{
                     textDecoration: "none",
-                    bg: isActive("/") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    bg: isActive("/") ? "brand.600" : navLinkHoverBg,
                     transform: "translateY(-2px)",
                   }}
                   transition="all 0.2s"
@@ -167,11 +172,11 @@ export function Layout() {
                   py={2}
                   rounded="full"
                   fontWeight={isActive("/menu") ? "semibold" : "medium"}
-                  color={isActive("/menu") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                  color={isActive("/menu") ? "white" : navLinkColor}
                   bg={isActive("/menu") ? "brand.500" : "transparent"}
                   _hover={{
                     textDecoration: "none",
-                    bg: isActive("/menu") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                    bg: isActive("/menu") ? "brand.600" : navLinkHoverBg,
                     transform: "translateY(-2px)",
                   }}
                   transition="all 0.2s"
@@ -187,11 +192,11 @@ export function Layout() {
                       py={2}
                       rounded="full"
                       fontWeight={isActive("/order") ? "semibold" : "medium"}
-                      color={isActive("/order") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                      color={isActive("/order") ? "white" : navLinkColor}
                       bg={isActive("/order") ? "brand.500" : "transparent"}
                       _hover={{
                         textDecoration: "none",
-                        bg: isActive("/order") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                        bg: isActive("/order") ? "brand.600" : navLinkHoverBg,
                         transform: "translateY(-2px)",
                       }}
                       transition="all 0.2s"
@@ -205,11 +210,11 @@ export function Layout() {
                       py={2}
                       rounded="full"
                       fontWeight={isActive("/orders") ? "semibold" : "medium"}
-                      color={isActive("/orders") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                      color={isActive("/orders") ? "white" : navLinkColor}
                       bg={isActive("/orders") ? "brand.500" : "transparent"}
                       _hover={{
                         textDecoration: "none",
-                        bg: isActive("/orders") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                        bg: isActive("/orders") ? "brand.600" : navLinkHoverBg,
                         transform: "translateY(-2px)",
                       }}
                       transition="all 0.2s"
@@ -224,11 +229,11 @@ export function Layout() {
                         py={2}
                         rounded="full"
                         fontWeight={isActive("/staff") ? "semibold" : "medium"}
-                        color={isActive("/staff") ? "white" : useColorModeValue("gray.700", "gray.200")}
+                        color={isActive("/staff") ? "white" : navLinkColor}
                         bg={isActive("/staff") ? "brand.500" : "transparent"}
                         _hover={{
                           textDecoration: "none",
-                          bg: isActive("/staff") ? "brand.600" : useColorModeValue("gray.100", "gray.700"),
+                          bg: isActive("/staff") ? "brand.600" : navLinkHoverBg,
                           transform: "translateY(-2px)",
                         }}
                         transition="all 0.2s"
