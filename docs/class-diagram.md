@@ -1,819 +1,62 @@
-# DDogan Zip Frontend - Class Diagram
+# DDogan Zip Frontend - Class Diagram (Updated)
 
 이 문서는 DDogan Zip Frontend 애플리케이션의 클래스 다이어그램을 Mermaid 형식으로 제공합니다.
+음성 주문 시스템 (Groq AI)이 추가된 최신 버전입니다.
 
 ## Mermaid Live Editor에서 보기
 
-아래 다이어그램을 [Mermaid Live Editor (Playground)](https://mermaid.live/)에 붙여넣어 예쁘게 시각화할 수 있습니다.
+아래 다이어그램을 [Mermaid Live Editor (Playground)](https://mermaid.live/)에 붙여넣어 시각화할 수 있습니다.
 
 ---
 
-## 전체 클래스 다이어그램
+## 1. 전체 아키텍처 개요
 
 ```mermaid
 ---
-title: DDogan Zip Frontend - Client Application Class Diagram
+title: 또간집 프론트엔드 전체 아키텍처
 ---
 classDiagram
     direction TB
 
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: API Types (src/api/types.ts)
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace API_Types {
-
-        class SuccessResponse~T~ {
-            +boolean success
-            +string message
-            +T data
-        }
-
-        class ErrorResponse {
-            +ErrorDetail error
-        }
-
-        class ErrorDetail {
-            +string code
-            +string message
-            +any details
-        }
-
-        class RegisterRequest {
-            +string email
-            +string password
-            +string name
-            +string phoneNumber
-            +string address
-        }
-
-        class LoginRequest {
-            +string email
-            +string password
-        }
-
-        class TokenResponse {
-            +string accessToken
-            +string refreshToken
-            +string tokenType
-        }
-
-        class RefreshRequest {
-            +string refreshToken
-        }
-
-        class UserProfile {
-            +number id
-            +string email
-            +string name
-            +string address
-            +string phone
-            +MemberGrade memberGrade
-            +number orderCount
-        }
-
-        class Dish {
-            +number dishId
-            +string name
-            +string description
-            +number basePrice
-            +number defaultQuantity
-        }
-
-        class ServingStyle {
-            +number styleId
-            +string name
-            +number additionalPrice
-            +string description
-        }
-
-        class DinnerMenuItem {
-            +number dinnerId
-            +string name
-            +string description
-            +number basePrice
-            +string imageUrl
-        }
-
-        class DinnerDetail {
-            +number dinnerId
-            +string name
-            +string description
-            +number basePrice
-            +string imageUrl
-            +Dish[] dishes
-            +ServingStyle[] availableStyles
-        }
-
-        class Customization {
-            +CustomizationAction action
-            +number dishId
-            +number quantity
-        }
-
-        class CustomizationResponse {
-            +CustomizationAction action
-            +number dishId
-            +number quantity
-            +string dishName
-            +number pricePerUnit
-        }
-
-        class CartItemRequest {
-            +number dinnerId
-            +number servingStyleId
-            +number quantity
-            +Customization[] customizations
-        }
-
-        class CartItem {
-            +number itemId
-            +number dinnerId
-            +string dinnerName
-            +number dinnerBasePrice
-            +number servingStyleId
-            +string servingStyleName
-            +number servingStylePrice
-            +number quantity
-            +number itemTotalPrice
-            +CustomizationResponse[] customizations
-        }
-
-        class CartResponse {
-            +number cartId
-            +CartItem[] items
-            +number totalPrice
-        }
-
-        class UpdateQuantityRequest {
-            +number quantity
-        }
-
-        class UpdateOptionsRequest {
-            +number servingStyleId
-            +Customization[] customizations
-        }
-
-        class CustomizeItemRequest {
-            +CustomizationAction action
-            +number dishId
-            +number quantity
-        }
-
-        class CheckoutRequest {
-            +string deliveryAddress
-            +string deliveryDate
-        }
-
-        class CheckoutResponse {
-            +boolean success
-            +string message
-            +number data
-        }
-
-        class BaseDish {
-            +number dishId
-            +string dishName
-            +number quantity
-        }
-
-        class OrderItem {
-            +number itemId
-            +number dinnerId
-            +string dinnerName
-            +string servingStyleName
-            +number quantity
-            +number price
-            +BaseDish[] baseDishes
-            +CustomizationResponse[] customizations
-        }
-
-        class Order {
-            +number orderId
-            +string orderDate
-            +string deliveryDate
-            +string deliveredAt
-            +string deliveryAddress
-            +OrderStatus status
-            +number originalPrice
-            +MemberGrade appliedGrade
-            +number discountPercent
-            +number discountAmount
-            +number totalPrice
-            +number itemCount
-            +OrderItem[] items
-        }
-
-        class OrderDetail {
-            +number orderId
-            +string orderDate
-            +string deliveryDate
-            +string deliveredAt
-            +string deliveryAddress
-            +OrderStatus status
-            +number originalPrice
-            +MemberGrade appliedGrade
-            +number discountPercent
-            +number discountAmount
-            +number totalPrice
-            +number itemCount
-            +OrderItem[] items
-        }
-
-        class UpdateOrderStatusRequest {
-            +OrderStatus status
-        }
-
-        class StaffAvailabilityResponse {
-            +number availableCooks
-            +number totalCooks
-            +number availableDrivers
-            +number totalDrivers
-            +boolean canStartCooking
-            +boolean canStartDelivery
-        }
-
-        class ActiveOrder {
-            +number orderId
-            +string customerName
-            +string customerEmail
-            +string orderDate
-            +string deliveryDate
-            +string deliveredAt
-            +string deliveryAddress
-            +OrderStatus status
-            +number totalPrice
-            +number itemCount
-            +OrderItem[] items
-        }
-
-        class InventoryItem {
-            +number dishId
-            +string dishName
-            +number currentStock
-            +number minimumStock
-        }
-
-        class VoiceCommand {
-            +VoiceAction action
-            +string dinner_type
-            +string serving_style
-            +number quantity
-            +string reply
-        }
-
+    class PresentationLayer {
+        <<layer>>
+        Pages
+        Components
     }
 
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: Enumerations
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace Enums {
-
-        class MemberGrade {
-            <<enumeration>>
-            NORMAL
-            BRONZE
-            SILVER
-            GOLD
-            VIP
-        }
-
-        class OrderStatus {
-            <<enumeration>>
-            CHECKING_STOCK
-            RECEIVED
-            IN_KITCHEN
-            COOKED
-            DELIVERING
-            DELIVERED
-            DRIVER_RETURNED
-            CANCELLED
-        }
-
-        class CustomizationAction {
-            <<enumeration>>
-            ADD
-            REMOVE
-            REPLACE
-        }
-
-        class VoiceAction {
-            <<enumeration>>
-            order
-            cancel
-            checkout
-            unknown
-        }
-
+    class ContextLayer {
+        <<layer>>
+        AuthContext
+        Providers
     }
 
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: API Client (src/api/client.ts)
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace API_Client {
-
-        class ApiClient {
-            <<singleton>>
-            -AxiosInstance instance
-            -string baseURL
-            +get~T~(url, config) Promise~T~
-            +post~T~(url, data, config) Promise~T~
-            +put~T~(url, data, config) Promise~T~
-            +patch~T~(url, data, config) Promise~T~
-            +delete~T~(url, config) Promise~T~
-        }
-
-        class TokenStorage {
-            <<utility>>
-            +getAccessToken() string
-            +setAccessToken(token) void
-            +getRefreshToken() string
-            +setRefreshToken(token) void
-            +clearTokens() void
-        }
-
-        class RequestInterceptor {
-            <<interceptor>>
-            +addAuthorizationHeader(config) AxiosRequestConfig
-        }
-
-        class ResponseInterceptor {
-            <<interceptor>>
-            +handleTokenRefresh(error) Promise
-        }
-
+    class ServiceLayer {
+        <<layer>>
+        API Services
+        Groq Service
     }
 
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: API Services
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace API_Services {
-
-        class AuthService {
-            <<service>>
-            +register(data: RegisterRequest) Promise~void~
-            +login(data: LoginRequest) Promise~TokenResponse~
-            +refreshToken(data: RefreshRequest) Promise~TokenResponse~
-            +logout() Promise~void~
-            +isAuthenticated() boolean
-            +getUserProfile() Promise~UserProfile~
-        }
-
-        class MenuService {
-            <<service>>
-            +getMenuList() Promise~DinnerMenuItem[]~
-            +getMenuDetails(dinnerId: number) Promise~DinnerDetail~
-            +getMenuItems() Promise~MenuItem[]~
-        }
-
-        class CartService {
-            <<service>>
-            +getCart() Promise~CartResponse~
-            +addCartItem(data: CartItemRequest) Promise~CartResponse~
-            +updateCartItemQuantity(itemId, data) Promise~CartResponse~
-            +updateCartItemOptions(itemId, data) Promise~CartResponse~
-            +removeCartItem(itemId: number) Promise~CartResponse~
-            +customizeCartItem(itemId, data) Promise~CartResponse~
-        }
-
-        class OrdersService {
-            <<service>>
-            +checkout(data: CheckoutRequest) Promise~number~
-            +getOrderHistory() Promise~Order[]~
-            +getOrderDetails(orderId: number) Promise~OrderDetail~
-            +placeOrder(cart: CartItem[]) Promise
-            +getPendingOrders() Promise~Order[]~
-        }
-
-        class StaffService {
-            <<service>>
-            +getActiveOrders() Promise~ActiveOrder[]~
-            +updateOrderStatus(orderId, data) Promise~Order~
-            +getInventory() Promise~InventoryItem[]~
-            +getStaffAvailability() Promise~StaffAvailabilityResponse~
-            +driverReturn(orderId: number) Promise~void~
-        }
-
-        class VoiceService {
-            <<service>>
-            +processVoiceCommand(transcript: string) Promise~VoiceCommand~
-        }
-
+    class DataLayer {
+        <<layer>>
+        Types
+        Interfaces
     }
 
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: Utilities (src/utils/)
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace Utils {
-
-        class JWTPayload {
-            +string sub
-            +string role
-            +number iat
-            +number exp
-        }
-
-        class JWTUtils {
-            <<utility>>
-            +decodeJWT(token: string) JWTPayload
-            +extractUserFromToken(token: string) UserInfo
-        }
-
-        class UserInfo {
-            +string email
-            +string name
-            +string role
-        }
-
-    }
-
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: Context (src/contexts/)
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace Context {
-
-        class User {
-            +string email
-            +string name
-            +string role
-        }
-
-        class AuthContextType {
-            <<interface>>
-            +User user
-            +boolean isAuthenticated
-            +boolean isLoading
-            +login(data: LoginRequest) Promise~void~
-            +register(data: RegisterRequest) Promise~void~
-            +logout() void
-        }
-
-        class AuthProvider {
-            <<component>>
-            -User user
-            -boolean isLoading
-            +login(data: LoginRequest) Promise~void~
-            +register(data: RegisterRequest) Promise~void~
-            +logout() void
-            +useAuth() AuthContextType
-        }
-
-        class UserStorage {
-            <<utility>>
-            +getUser() User
-            +setUser(user: User) void
-            +clearUser() void
-        }
-
-    }
-
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: Components (src/components/)
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace Components {
-
-        class ProtectedRoute {
-            <<component>>
-            +ReactNode children
-            #checkAuthentication() boolean
-            +render() ReactElement
-        }
-
-        class StaffRoute {
-            <<component>>
-            +ReactNode children
-            #checkStaffRole() boolean
-            +render() ReactElement
-        }
-
-        class Layout {
-            <<component>>
-            +renderNavigation() ReactElement
-            +renderUserMenu() ReactElement
-            +render() ReactElement
-        }
-
-        class ColorModeToggle {
-            <<component>>
-            +toggleColorMode() void
-            +render() ReactElement
-        }
-
-    }
-
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: Pages (src/pages/)
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace Pages {
-
-        class HomePage {
-            <<page>>
-            +renderHeroSection() ReactElement
-            +renderFeaturesGrid() ReactElement
-            +renderCTASection() ReactElement
-            +handleNavigateToOrder() void
-            +handleNavigateToStaff() void
-        }
-
-        class LoginPage {
-            <<page>>
-            -LoginRequest formData
-            +handleSubmit(e: FormEvent) Promise~void~
-            +handleChange(e: ChangeEvent) void
-            +render() ReactElement
-        }
-
-        class RegisterPage {
-            <<page>>
-            -RegisterRequest formData
-            +handleSubmit(e: FormEvent) Promise~void~
-            +handleChange(e: ChangeEvent) void
-            +render() ReactElement
-        }
-
-        class MenuBrowsePage {
-            <<page>>
-            -number selectedDinnerId
-            -boolean isModalOpen
-            +handleMenuClick(dinnerId: number) void
-            +handleOrderClick(dinnerId: number) void
-            +renderMenuGrid() ReactElement
-            +renderDetailModal() ReactElement
-        }
-
-        class MenuOrderPage {
-            <<page>>
-            -DinnerDetail selectedDinner
-            -string selectedStyleId
-            -number quantity
-            -Map~number,Customization~ customizations
-            -string deliveryAddress
-            -string deliveryDate
-            -VoiceCommand voiceResult
-            -boolean isProcessing
-            +handleMenuClick(dinner: DinnerDetail) void
-            +handleAddToCart() Promise~void~
-            +handleCustomizationQuantityChange(dishId, currentQty, defaultQty) void
-            +handleCheckout() void
-            +handleConfirmCheckout() Promise~void~
-            +processVoiceInput(transcript: string) Promise~void~
-            +calculateItemPrice() number
-            +renderVoiceSection() ReactElement
-            +renderCartSection() ReactElement
-            +renderMenuList() ReactElement
-            +renderDetailModal() ReactElement
-            +renderCheckoutModal() ReactElement
-        }
-
-        class OrderHistoryPage {
-            <<page>>
-            -number selectedOrderId
-            -boolean isModalOpen
-            +handleOrderClick(orderId: number) void
-            +getStatusConfig(status: OrderStatus) StatusConfig
-            +renderOrderCards() ReactElement
-            +renderDetailModal() ReactElement
-        }
-
-        class StaffDashboardPage {
-            <<page>>
-            -number selectedOrderId
-            -boolean isModalOpen
-            +handleCheckStock(orderId: number) void
-            +handleAcceptOrder() Promise~void~
-            +handleCancelOrder() Promise~void~
-            +handleStatusChange(orderId, status) Promise~void~
-            +handleDriverReturn(orderId: number) Promise~void~
-            +calculateRequiredStock() RequiredStock[]
-            +renderStatsCards() ReactElement
-            +renderOrderManagementTab() ReactElement
-            +renderInventoryTab() ReactElement
-            +renderStockCheckModal() ReactElement
-        }
-
-        class RequiredStock {
-            +number dishId
-            +string dishName
-            +number required
-            +number available
-            +boolean isInsufficient
-        }
-
-    }
-
-    %% ═══════════════════════════════════════════════════════════════
-    %% NAMESPACE: Configuration
-    %% ═══════════════════════════════════════════════════════════════
-
-    namespace Config {
-
-        class MemberGradeConfig {
-            <<constant>>
-            +string label
-            +number discountPercent
-            +string colorScheme
-        }
-
-        class StatusConfig {
-            <<constant>>
-            +string label
-            +string colorScheme
-            +ReactElement icon
-        }
-
-        class NextStatuses {
-            <<constant>>
-            +OrderStatus[] getNextStatuses(status: OrderStatus)
-        }
-
-    }
-
-    %% ═══════════════════════════════════════════════════════════════
-    %% RELATIONSHIPS
-    %% ═══════════════════════════════════════════════════════════════
-
-    %% Inheritance & Implementation
-    CustomizationResponse --|> Customization : extends
-    OrderDetail --|> Order : extends
-    StaffRoute --|> ProtectedRoute : wraps
-
-    %% Composition (strong ownership)
-    DinnerDetail *-- Dish : contains
-    DinnerDetail *-- ServingStyle : contains
-    CartResponse *-- CartItem : contains
-    CartItem *-- CustomizationResponse : contains
-    Order *-- OrderItem : contains
-    OrderItem *-- BaseDish : contains
-    OrderItem *-- CustomizationResponse : contains
-    ActiveOrder *-- OrderItem : contains
-    ErrorResponse *-- ErrorDetail : contains
-
-    %% Aggregation (weak ownership)
-    CartItemRequest o-- Customization : includes
-    UpdateOptionsRequest o-- Customization : includes
-
-    %% Dependencies
-    UserProfile --> MemberGrade : uses
-    Order --> OrderStatus : uses
-    Order --> MemberGrade : uses
-    ActiveOrder --> OrderStatus : uses
-    Customization --> CustomizationAction : uses
-    CustomizationResponse --> CustomizationAction : uses
-    CustomizeItemRequest --> CustomizationAction : uses
-    VoiceCommand --> VoiceAction : uses
-    UpdateOrderStatusRequest --> OrderStatus : uses
-
-    %% Service Dependencies
-    ApiClient --> TokenStorage : uses
-    ApiClient --> RequestInterceptor : uses
-    ApiClient --> ResponseInterceptor : uses
-    ResponseInterceptor --> TokenStorage : uses
-
-    AuthService --> ApiClient : uses
-    AuthService --> LoginRequest : accepts
-    AuthService --> RegisterRequest : accepts
-    AuthService --> TokenResponse : returns
-    AuthService --> UserProfile : returns
-
-    MenuService --> ApiClient : uses
-    MenuService --> DinnerMenuItem : returns
-    MenuService --> DinnerDetail : returns
-
-    CartService --> ApiClient : uses
-    CartService --> CartItemRequest : accepts
-    CartService --> CartResponse : returns
-    CartService --> UpdateQuantityRequest : accepts
-    CartService --> UpdateOptionsRequest : accepts
-
-    OrdersService --> ApiClient : uses
-    OrdersService --> CheckoutRequest : accepts
-    OrdersService --> Order : returns
-    OrdersService --> OrderDetail : returns
-
-    StaffService --> ApiClient : uses
-    StaffService --> ActiveOrder : returns
-    StaffService --> InventoryItem : returns
-    StaffService --> StaffAvailabilityResponse : returns
-    StaffService --> UpdateOrderStatusRequest : accepts
-
-    VoiceService --> ApiClient : uses
-    VoiceService --> VoiceCommand : returns
-
-    %% Utility Dependencies
-    JWTUtils --> JWTPayload : creates
-    JWTUtils --> UserInfo : creates
-
-    %% Context Dependencies
-    AuthProvider --> AuthService : uses
-    AuthProvider --> TokenStorage : uses
-    AuthProvider --> JWTUtils : uses
-    AuthProvider --> User : manages
-    AuthProvider ..> AuthContextType : implements
-
-    UserStorage --> User : stores
-
-    %% Component Dependencies
-    ProtectedRoute --> AuthProvider : uses
-    StaffRoute --> AuthProvider : uses
-    Layout --> AuthProvider : uses
-    Layout --> ColorModeToggle : contains
-
-    %% Page Dependencies
-    LoginPage --> AuthProvider : uses
-    LoginPage --> LoginRequest : creates
-
-    RegisterPage --> AuthProvider : uses
-    RegisterPage --> RegisterRequest : creates
-
-    MenuBrowsePage --> MenuService : uses
-    MenuBrowsePage --> DinnerMenuItem : displays
-    MenuBrowsePage --> DinnerDetail : displays
-
-    MenuOrderPage --> MenuService : uses
-    MenuOrderPage --> CartService : uses
-    MenuOrderPage --> OrdersService : uses
-    MenuOrderPage --> VoiceService : uses
-    MenuOrderPage --> AuthService : uses
-    MenuOrderPage --> DinnerDetail : uses
-    MenuOrderPage --> CartResponse : uses
-    MenuOrderPage --> VoiceCommand : uses
-    MenuOrderPage --> Customization : manages
-    MenuOrderPage --> CheckoutRequest : creates
-
-    OrderHistoryPage --> OrdersService : uses
-    OrderHistoryPage --> Order : displays
-    OrderHistoryPage --> OrderDetail : displays
-    OrderHistoryPage --> StatusConfig : uses
-
-    StaffDashboardPage --> StaffService : uses
-    StaffDashboardPage --> OrdersService : uses
-    StaffDashboardPage --> ActiveOrder : displays
-    StaffDashboardPage --> InventoryItem : displays
-    StaffDashboardPage --> StaffAvailabilityResponse : displays
-    StaffDashboardPage --> RequiredStock : calculates
-    StaffDashboardPage --> StatusConfig : uses
-
-    %% Configuration Dependencies
-    MemberGradeConfig --> MemberGrade : configures
-    StatusConfig --> OrderStatus : configures
-    NextStatuses --> OrderStatus : maps
+    PresentationLayer --> ContextLayer : uses
+    ContextLayer --> ServiceLayer : uses
+    ServiceLayer --> DataLayer : uses
 ```
 
 ---
 
-## 패키지별 상세 다이어그램
-
-더 세밀한 분석을 위해 각 패키지별로 분리된 다이어그램을 제공합니다.
-
-### 1. API Types 패키지
+## 2. 인증 및 회원 타입
 
 ```mermaid
 ---
-title: API Types Package
+title: 인증 및 회원 관련 타입
 ---
 classDiagram
-    direction LR
-
-    %% Authentication Types
-    class RegisterRequest {
-        +string email
-        +string password
-        +string name
-        +string phoneNumber
-        +string address
-    }
-
-    class LoginRequest {
-        +string email
-        +string password
-    }
-
-    class TokenResponse {
-        +string accessToken
-        +string refreshToken
-        +string tokenType
-    }
-
-    class RefreshRequest {
-        +string refreshToken
-    }
-
-    class UserProfile {
-        +number id
-        +string email
-        +string name
-        +string address
-        +string phone
-        +MemberGrade memberGrade
-        +number orderCount
-    }
+    direction TB
 
     class MemberGrade {
         <<enumeration>>
@@ -824,34 +67,70 @@ classDiagram
         VIP
     }
 
-    UserProfile --> MemberGrade
+    class MemberGradeConfig {
+        <<constant>>
+        +string label
+        +number discountPercent
+        +string colorScheme
+    }
+
+    class RegisterRequest {
+        <<interface>>
+        +string email
+        +string password
+        +string name
+        +string phoneNumber
+        +string address
+    }
+
+    class LoginRequest {
+        <<interface>>
+        +string email
+        +string password
+    }
+
+    class TokenResponse {
+        <<interface>>
+        +string accessToken
+        +string refreshToken
+        +string tokenType
+    }
+
+    class UserProfile {
+        <<interface>>
+        +number id
+        +string email
+        +string name
+        +string address
+        +string phone
+        +MemberGrade memberGrade
+        +number orderCount
+    }
+
+    class User {
+        <<interface>>
+        +string email
+        +string name
+        +string role
+    }
+
+    MemberGrade ..> MemberGradeConfig : maps to
+    UserProfile --> MemberGrade : has
 ```
 
-### 2. Menu Types 패키지
+---
+
+## 3. 메뉴 및 요리 타입
 
 ```mermaid
 ---
-title: Menu Types Package
+title: 메뉴 및 요리 타입 계층
 ---
 classDiagram
     direction TB
 
-    class Dish {
-        +number dishId
-        +string name
-        +string description
-        +number basePrice
-        +number defaultQuantity
-    }
-
-    class ServingStyle {
-        +number styleId
-        +string name
-        +number additionalPrice
-        +string description
-    }
-
     class DinnerMenuItem {
+        <<interface>>
         +number dinnerId
         +string name
         +string description
@@ -860,6 +139,7 @@ classDiagram
     }
 
     class DinnerDetail {
+        <<interface>>
         +number dinnerId
         +string name
         +string description
@@ -869,16 +149,35 @@ classDiagram
         +ServingStyle[] availableStyles
     }
 
-    DinnerDetail *-- Dish : contains 1..*
-    DinnerDetail *-- ServingStyle : contains 1..*
-    DinnerDetail --|> DinnerMenuItem : extends
+    class Dish {
+        <<interface>>
+        +number dishId
+        +string name
+        +string description
+        +number basePrice
+        +number defaultQuantity
+    }
+
+    class ServingStyle {
+        <<interface>>
+        +number styleId
+        +string name
+        +number additionalPrice
+        +string description
+    }
+
+    DinnerMenuItem <|-- DinnerDetail : extends
+    DinnerDetail "1" *-- "*" Dish : contains
+    DinnerDetail "1" *-- "*" ServingStyle : has
 ```
 
-### 3. Cart Types 패키지
+---
+
+## 4. 장바구니 및 커스터마이징 타입
 
 ```mermaid
 ---
-title: Cart Types Package
+title: 장바구니 관련 타입
 ---
 classDiagram
     direction TB
@@ -891,20 +190,23 @@ classDiagram
     }
 
     class Customization {
+        <<interface>>
         +CustomizationAction action
         +number dishId
         +number quantity
     }
 
     class CustomizationResponse {
+        <<interface>>
         +CustomizationAction action
         +number dishId
-        +number quantity
         +string dishName
+        +number quantity
         +number pricePerUnit
     }
 
     class CartItemRequest {
+        <<interface>>
         +number dinnerId
         +number servingStyleId
         +number quantity
@@ -912,6 +214,7 @@ classDiagram
     }
 
     class CartItem {
+        <<interface>>
         +number itemId
         +number dinnerId
         +string dinnerName
@@ -925,34 +228,26 @@ classDiagram
     }
 
     class CartResponse {
+        <<interface>>
         +number cartId
         +CartItem[] items
         +number totalPrice
     }
 
-    class UpdateQuantityRequest {
-        +number quantity
-    }
-
-    class UpdateOptionsRequest {
-        +number servingStyleId
-        +Customization[] customizations
-    }
-
     Customization --> CustomizationAction
-    CustomizationResponse --|> Customization : extends
     CustomizationResponse --> CustomizationAction
-    CartItemRequest o-- Customization : 0..*
-    CartItem *-- CustomizationResponse : 0..*
-    CartResponse *-- CartItem : 0..*
-    UpdateOptionsRequest o-- Customization : 0..*
+    CartItemRequest "1" *-- "*" Customization
+    CartItem "1" *-- "*" CustomizationResponse
+    CartResponse "1" *-- "*" CartItem
 ```
 
-### 4. Order Types 패키지
+---
+
+## 5. 주문 관련 타입
 
 ```mermaid
 ---
-title: Order Types Package
+title: 주문 상태 및 주문 타입
 ---
 classDiagram
     direction TB
@@ -969,27 +264,21 @@ classDiagram
         CANCELLED
     }
 
-    class MemberGrade {
-        <<enumeration>>
-        NORMAL
-        BRONZE
-        SILVER
-        GOLD
-        VIP
-    }
-
     class CheckoutRequest {
+        <<interface>>
         +string deliveryAddress
         +string deliveryDate
     }
 
     class BaseDish {
+        <<interface>>
         +number dishId
         +string dishName
         +number quantity
     }
 
     class OrderItem {
+        <<interface>>
         +number itemId
         +number dinnerId
         +string dinnerName
@@ -1001,6 +290,7 @@ classDiagram
     }
 
     class Order {
+        <<interface>>
         +number orderId
         +string orderDate
         +string deliveryDate
@@ -1017,46 +307,93 @@ classDiagram
     }
 
     class OrderDetail {
-        +number orderId
+        <<interface>>
         +OrderItem[] items
     }
 
-    class ActiveOrder {
-        +number orderId
-        +string customerName
-        +string customerEmail
-        +OrderStatus status
-        +number totalPrice
-        +OrderItem[] items
-    }
-
-    OrderItem *-- BaseDish : 1..*
-    Order *-- OrderItem : 0..*
     Order --> OrderStatus
     Order --> MemberGrade
-    OrderDetail --|> Order : extends
-    ActiveOrder --> OrderStatus
-    ActiveOrder *-- OrderItem : 0..*
+    Order "1" *-- "*" OrderItem
+    OrderItem "1" *-- "*" BaseDish
+    OrderItem "1" *-- "*" CustomizationResponse
+    Order <|-- OrderDetail : extends
 ```
 
-### 5. Services 패키지
+---
+
+## 6. 직원 관련 타입
 
 ```mermaid
 ---
-title: API Services Package
+title: 직원 대시보드 타입
+---
+classDiagram
+    direction TB
+
+    class ActiveOrder {
+        <<interface>>
+        +number orderId
+        +string customerName
+        +string customerEmail
+        +string orderDate
+        +string deliveryDate
+        +string deliveredAt
+        +string deliveryAddress
+        +OrderStatus status
+        +number totalPrice
+        +number itemCount
+        +OrderItem[] items
+    }
+
+    class InventoryItem {
+        <<interface>>
+        +number dishId
+        +string dishName
+        +number currentStock
+        +number minimumStock
+    }
+
+    class StaffAvailabilityResponse {
+        <<interface>>
+        +number availableCooks
+        +number totalCooks
+        +number availableDrivers
+        +number totalDrivers
+        +boolean canStartCooking
+        +boolean canStartDelivery
+    }
+
+    class UpdateOrderStatusRequest {
+        <<interface>>
+        +OrderStatus status
+    }
+
+    ActiveOrder --> OrderStatus
+    ActiveOrder "1" *-- "*" OrderItem
+    UpdateOrderStatusRequest --> OrderStatus
+```
+
+---
+
+## 7. API 서비스 계층
+
+```mermaid
+---
+title: API 클라이언트 및 서비스
 ---
 classDiagram
     direction TB
 
     class ApiClient {
         <<singleton>>
-        -AxiosInstance instance
         -string baseURL
-        +get~T~(url, config) Promise~T~
-        +post~T~(url, data, config) Promise~T~
-        +put~T~(url, data, config) Promise~T~
-        +patch~T~(url, data, config) Promise~T~
-        +delete~T~(url, config) Promise~T~
+        -object headers
+        +get~T~(url) Promise~T~
+        +post~T~(url, data) Promise~T~
+        +put~T~(url, data) Promise~T~
+        +delete~T~(url) Promise~T~
+        -addAuthToken(config) void
+        -handleTokenRefresh(error) Promise
     }
 
     class TokenStorage {
@@ -1068,7 +405,7 @@ classDiagram
         +clearTokens() void
     }
 
-    class AuthService {
+    class AuthAPI {
         <<service>>
         +register(data) Promise~void~
         +login(data) Promise~TokenResponse~
@@ -1078,65 +415,116 @@ classDiagram
         +getUserProfile() Promise~UserProfile~
     }
 
-    class MenuService {
+    class MenuAPI {
         <<service>>
         +getMenuList() Promise~DinnerMenuItem[]~
-        +getMenuDetails(dinnerId) Promise~DinnerDetail~
+        +getMenuDetails(id) Promise~DinnerDetail~
     }
 
-    class CartService {
+    class CartAPI {
         <<service>>
         +getCart() Promise~CartResponse~
         +addCartItem(data) Promise~CartResponse~
-        +updateCartItemQuantity(itemId, data) Promise~CartResponse~
-        +updateCartItemOptions(itemId, data) Promise~CartResponse~
-        +removeCartItem(itemId) Promise~CartResponse~
+        +updateCartItemQuantity(id, data) Promise~CartResponse~
+        +removeCartItem(id) Promise~CartResponse~
+        +customizeCartItem(id, data) Promise~CartResponse~
     }
 
-    class OrdersService {
+    class OrdersAPI {
         <<service>>
         +checkout(data) Promise~number~
         +getOrderHistory() Promise~Order[]~
-        +getOrderDetails(orderId) Promise~OrderDetail~
+        +getOrderDetails(id) Promise~OrderDetail~
     }
 
-    class StaffService {
+    class StaffAPI {
         <<service>>
         +getActiveOrders() Promise~ActiveOrder[]~
-        +updateOrderStatus(orderId, data) Promise~Order~
+        +updateOrderStatus(id, data) Promise~Order~
         +getInventory() Promise~InventoryItem[]~
         +getStaffAvailability() Promise~StaffAvailabilityResponse~
-        +driverReturn(orderId) Promise~void~
-    }
-
-    class VoiceService {
-        <<service>>
-        +processVoiceCommand(transcript) Promise~VoiceCommand~
+        +driverReturn(id) Promise~void~
     }
 
     ApiClient --> TokenStorage : uses
-    AuthService --> ApiClient : uses
-    MenuService --> ApiClient : uses
-    CartService --> ApiClient : uses
-    OrdersService --> ApiClient : uses
-    StaffService --> ApiClient : uses
-    VoiceService --> ApiClient : uses
+    AuthAPI --> ApiClient
+    MenuAPI --> ApiClient
+    CartAPI --> ApiClient
+    OrdersAPI --> ApiClient
+    StaffAPI --> ApiClient
 ```
 
-### 6. Context & Auth 패키지
+---
+
+## 8. Groq AI 음성 주문 서비스
 
 ```mermaid
 ---
-title: Auth Context Package
+title: Groq AI 음성 주문 서비스
 ---
 classDiagram
     direction TB
 
-    class User {
-        +string email
-        +string name
+    class ChatMessage {
+        <<interface>>
         +string role
+        +string content
     }
+
+    class OrderState {
+        <<interface>>
+        +string dinnerName
+        +number dinnerId
+        +string servingStyle
+        +number servingStyleId
+        +number quantity
+        +VoiceCustomization[] customizations
+        +string deliveryDate
+        +boolean isConfirmed
+    }
+
+    class VoiceCustomization {
+        <<interface>>
+        +string dishName
+        +number dishId
+        +number quantity
+        +string action
+    }
+
+    class AIResponse {
+        <<interface>>
+        +string message
+        +OrderState orderState
+        +string action
+    }
+
+    class GroqService {
+        <<service>>
+        -string GROQ_API_KEY
+        -string GROQ_API_URL
+        +createSystemPrompt(name, items, details) string
+        +chatWithAI(messages, name, items, details) Promise~AIResponse~
+        +getInitialGreeting(name) string
+        +speakText(text, onEnd) void
+        +stopSpeaking() void
+    }
+
+    OrderState "1" *-- "*" VoiceCustomization
+    AIResponse *-- OrderState
+    GroqService --> ChatMessage : uses
+    GroqService --> AIResponse : returns
+```
+
+---
+
+## 9. Context 및 상태 관리
+
+```mermaid
+---
+title: 인증 Context
+---
+classDiagram
+    direction TB
 
     class AuthContextType {
         <<interface>>
@@ -1152,45 +540,32 @@ classDiagram
         <<component>>
         -User user
         -boolean isLoading
-        +login(data) Promise~void~
-        +register(data) Promise~void~
-        +logout() void
+        -initAuth() void
+        -handleLogin(data) Promise~void~
+        -handleRegister(data) Promise~void~
+        -handleLogout() void
+        +render() ReactNode
     }
 
-    class UserStorage {
-        <<utility>>
-        +getUser() User
-        +setUser(user) void
-        +clearUser() void
+    class useAuth {
+        <<hook>>
+        +call() AuthContextType
     }
 
-    class JWTPayload {
-        +string sub
-        +string role
-        +number iat
-        +number exp
-    }
-
-    class JWTUtils {
-        <<utility>>
-        +decodeJWT(token) JWTPayload
-        +extractUserFromToken(token) User
-    }
-
-    AuthProvider ..|> AuthContextType : implements
-    AuthProvider --> User : manages
-    AuthProvider --> UserStorage : uses
-    AuthProvider --> JWTUtils : uses
-    UserStorage --> User : stores
-    JWTUtils --> JWTPayload : creates
-    JWTUtils --> User : extracts
+    AuthContextType --> User
+    AuthProvider ..|> AuthContextType : provides
+    useAuth --> AuthContextType : returns
+    AuthProvider --> AuthAPI : uses
+    AuthProvider --> TokenStorage : uses
 ```
 
-### 7. Pages 패키지
+---
+
+## 10. 컴포넌트 계층
 
 ```mermaid
 ---
-title: Pages Package
+title: 라우트 보호 및 음성 주문 컴포넌트
 ---
 classDiagram
     direction TB
@@ -1198,166 +573,325 @@ classDiagram
     class ProtectedRoute {
         <<component>>
         +ReactNode children
-        #checkAuthentication() boolean
+        -useAuth() AuthContextType
+        +render() ReactNode
     }
 
     class StaffRoute {
         <<component>>
         +ReactNode children
-        #checkStaffRole() boolean
+        -useAuth() AuthContextType
+        +render() ReactNode
     }
 
-    class HomePage {
-        <<page>>
-        +handleNavigateToOrder() void
-        +handleNavigateToStaff() void
+    class VoiceOrderModalProps {
+        <<interface>>
+        +boolean isOpen
+        +function onClose
+        +string customerName
+        +DinnerMenuItem[] menuItems
+        +Map menuDetails
+        +function onOrderComplete
     }
 
-    class LoginPage {
-        <<page>>
-        -LoginRequest formData
-        +handleSubmit(e) Promise~void~
-        +handleChange(e) void
+    class ConversationItem {
+        <<interface>>
+        +string role
+        +string content
+        +Date timestamp
     }
 
-    class RegisterPage {
-        <<page>>
-        -RegisterRequest formData
-        +handleSubmit(e) Promise~void~
-        +handleChange(e) void
+    class VoiceOrderModal {
+        <<component>>
+        +VoiceOrderModalProps props
+        -ConversationItem[] conversation
+        -ChatMessage[] chatHistory
+        -OrderState orderState
+        -boolean isProcessing
+        -boolean isSpeaking
+        -boolean isMuted
+        -boolean isListeningActive
+        -startListening() void
+        -stopListening() void
+        -processUserInput(text) Promise~void~
+        -handleOrderConfirm(state) void
+        -toggleMicrophone() void
+        -toggleMute() void
+        +render() ReactNode
     }
 
-    class MenuBrowsePage {
-        <<page>>
-        -number selectedDinnerId
-        +handleMenuClick(dinnerId) void
-        +handleOrderClick(dinnerId) void
-    }
-
-    class MenuOrderPage {
-        <<page>>
-        -DinnerDetail selectedDinner
-        -Map customizations
-        -VoiceCommand voiceResult
-        +handleAddToCart() Promise~void~
-        +handleCheckout() void
-        +handleConfirmCheckout() Promise~void~
-        +processVoiceInput(transcript) Promise~void~
-    }
-
-    class OrderHistoryPage {
-        <<page>>
-        -number selectedOrderId
-        +handleOrderClick(orderId) void
-    }
-
-    class StaffDashboardPage {
-        <<page>>
-        -number selectedOrderId
-        +handleCheckStock(orderId) void
-        +handleAcceptOrder() Promise~void~
-        +handleCancelOrder() Promise~void~
-        +handleDriverReturn(orderId) Promise~void~
-        +calculateRequiredStock() RequiredStock[]
-    }
-
-    StaffRoute --|> ProtectedRoute : wraps
-
-    LoginPage --> ProtectedRoute : not protected
-    RegisterPage --> ProtectedRoute : not protected
-    MenuBrowsePage --> ProtectedRoute : not protected
-    MenuOrderPage --> ProtectedRoute : protected
-    OrderHistoryPage --> ProtectedRoute : protected
-    StaffDashboardPage --> StaffRoute : staff only
+    ProtectedRoute --> useAuth
+    StaffRoute --> ProtectedRoute : wraps
+    StaffRoute --> useAuth
+    VoiceOrderModal --> VoiceOrderModalProps
+    VoiceOrderModal --> ConversationItem
+    VoiceOrderModal --> GroqService
 ```
 
 ---
 
-## 데이터 흐름 다이어그램
+## 11. 페이지 컴포넌트
 
 ```mermaid
 ---
-title: Application Data Flow
+title: 페이지 컴포넌트 구조
 ---
-flowchart TB
-    subgraph Client["Client Application"]
-        subgraph Pages["Pages"]
-            LP[LoginPage]
-            RP[RegisterPage]
-            MB[MenuBrowsePage]
-            MO[MenuOrderPage]
-            OH[OrderHistoryPage]
-            SD[StaffDashboardPage]
-        end
+classDiagram
+    direction TB
 
-        subgraph Context["Context"]
-            AP[AuthProvider]
-            US[UserStorage]
-        end
+    class Layout {
+        <<component>>
+        -useLocation() Location
+        -useAuth() AuthContextType
+        -isActive(path) boolean
+        +render() ReactNode
+    }
 
-        subgraph Services["API Services"]
-            AS[AuthService]
-            MS[MenuService]
-            CS[CartService]
-            OS[OrdersService]
-            SS[StaffService]
-            VS[VoiceService]
-        end
+    class LoginPage {
+        <<component>>
+        -LoginRequest formData
+        -useAuth() AuthContextType
+        -handleSubmit() Promise~void~
+        +render() ReactNode
+    }
 
-        subgraph Core["Core"]
-            AC[ApiClient]
-            TS[TokenStorage]
-            JU[JWTUtils]
-        end
-    end
+    class RegisterPage {
+        <<component>>
+        -RegisterRequest formData
+        -useAuth() AuthContextType
+        -handleSubmit() Promise~void~
+        +render() ReactNode
+    }
 
-    subgraph Backend["Backend Server"]
-        API[REST API]
-    end
+    class MenuBrowsePage {
+        <<component>>
+        -number selectedDinnerId
+        -DinnerMenuItem[] menuList
+        -DinnerDetail menuDetail
+        +render() ReactNode
+    }
 
-    LP --> AP
-    RP --> AP
-    AP --> AS
-    AP --> TS
-    AP --> JU
-    AP --> US
+    Layout --> useAuth
+    LoginPage --> useAuth
+    RegisterPage --> useAuth
+    MenuBrowsePage --> MenuAPI
+```
 
-    MB --> MS
-    MO --> MS
-    MO --> CS
-    MO --> OS
-    MO --> VS
-    OH --> OS
-    SD --> SS
-    SD --> OS
+```mermaid
+---
+title: MenuOrderPage 상세 구조
+---
+classDiagram
+    direction TB
 
-    AS --> AC
-    MS --> AC
-    CS --> AC
-    OS --> AC
-    SS --> AC
-    VS --> AC
+    class MenuOrderPage {
+        <<component>>
+        -DinnerMenuItem[] menuItems
+        -CartResponse cartData
+        -UserProfile userProfile
+        -Map menuDetailsCache
+        -DinnerDetail selectedDinner
+        -string selectedStyleId
+        -number quantity
+        -Map customizations
+        -string deliveryAddress
+        -string deliveryDate
+        -boolean isProcessing
+        -boolean isDetailOpen
+        -boolean isCheckoutOpen
+        -boolean isVoiceOrderOpen
+        +handleMenuClick(dinner) Promise~void~
+        +handleVoiceOrderOpen() Promise~void~
+        +handleVoiceOrderComplete(order, date) void
+        +handleAddToCart() void
+        +handleCheckout() void
+        +handleConfirmCheckout() void
+        +render() ReactNode
+    }
 
-    AC --> TS
-    AC --> API
+    MenuOrderPage --> MenuAPI : queries
+    MenuOrderPage --> CartAPI : mutations
+    MenuOrderPage --> OrdersAPI : checkout
+    MenuOrderPage --> VoiceOrderModal : contains
+    MenuOrderPage --> useAuth
+```
+
+```mermaid
+---
+title: 주문 내역 및 직원 페이지
+---
+classDiagram
+    direction TB
+
+    class OrderHistoryPage {
+        <<component>>
+        -Order[] orders
+        -OrderDetail orderDetail
+        -number selectedOrderId
+        -boolean isDetailOpen
+        +render() ReactNode
+    }
+
+    class StaffDashboardPage {
+        <<component>>
+        -ActiveOrder[] activeOrders
+        -InventoryItem[] inventory
+        -StaffAvailabilityResponse availability
+        -number selectedOrderId
+        +handleStatusChange(id, status) void
+        +handleDriverReturn(id) void
+        +render() ReactNode
+    }
+
+    OrderHistoryPage --> OrdersAPI
+    StaffDashboardPage --> StaffAPI
+    StaffDashboardPage --> OrdersAPI
 ```
 
 ---
 
-## 사용 방법
+## 12. 전체 모듈 의존성
 
-1. **Mermaid Live Editor 접속**: https://mermaid.live/
-2. **코드 복사**: 위의 Mermaid 코드 블록 중 원하는 다이어그램을 복사
-3. **붙여넣기**: Editor 왼쪽 패널에 붙여넣기
-4. **다운로드**: 오른쪽 패널에서 PNG/SVG 형식으로 다운로드
+```mermaid
+---
+title: 모듈 간 의존성 관계
+---
+flowchart TB
+    subgraph External["External Libraries"]
+        ReactQuery["@tanstack/react-query"]
+        ChakraUI["@chakra-ui/react"]
+        SpeechRec["react-speech-recognition"]
+        Axios["axios"]
+    end
 
-## 참고사항
+    subgraph DataLayer["Data Layer"]
+        Types["types.ts"]
+    end
 
-- **방향 설정**: `direction TB` (위에서 아래), `direction LR` (왼쪽에서 오른쪽)
-- **관계 표시**:
-  - `--|>`: 상속 (inheritance)
-  - `..|>`: 구현 (implementation)
-  - `*--`: 합성 (composition, 강한 소유)
-  - `o--`: 집합 (aggregation, 약한 소유)
-  - `-->`: 의존성 (dependency)
-- **스테레오타입**: `<<enumeration>>`, `<<interface>>`, `<<service>>`, `<<component>>`, `<<page>>` 등
+    subgraph ServiceLayer["Service Layer"]
+        ApiClient["client.ts"]
+        AuthAPI["auth.ts"]
+        MenuAPI["menu.ts"]
+        CartAPI["cart.ts"]
+        OrdersAPI["orders.ts"]
+        StaffAPI["staff.ts"]
+        GroqSvc["groqService.ts"]
+    end
+
+    subgraph ContextLayer["Context Layer"]
+        AuthCtx["AuthContext.tsx"]
+    end
+
+    subgraph ComponentLayer["Component Layer"]
+        ProtRoute["ProtectedRoute.tsx"]
+        StaffRt["StaffRoute.tsx"]
+        VoiceModal["VoiceOrderModal.tsx"]
+    end
+
+    subgraph PageLayer["Page Layer"]
+        Layout["Layout"]
+        LoginPg["LoginPage"]
+        RegPg["RegisterPage"]
+        MenuBrw["MenuBrowsePage"]
+        MenuOrd["MenuOrderPage"]
+        OrderHist["OrderHistoryPage"]
+        StaffDash["StaffDashboardPage"]
+    end
+
+    ApiClient --> Axios
+    ApiClient --> Types
+    AuthAPI --> ApiClient
+    MenuAPI --> ApiClient
+    CartAPI --> ApiClient
+    OrdersAPI --> ApiClient
+    StaffAPI --> ApiClient
+    GroqSvc --> Types
+
+    AuthCtx --> AuthAPI
+
+    ProtRoute --> AuthCtx
+    StaffRt --> ProtRoute
+    VoiceModal --> GroqSvc
+    VoiceModal --> SpeechRec
+    VoiceModal --> ChakraUI
+
+    Layout --> AuthCtx
+    LoginPg --> AuthCtx
+    RegPg --> AuthCtx
+    MenuBrw --> MenuAPI
+    MenuBrw --> ReactQuery
+
+    MenuOrd --> MenuAPI
+    MenuOrd --> CartAPI
+    MenuOrd --> OrdersAPI
+    MenuOrd --> AuthCtx
+    MenuOrd --> VoiceModal
+    MenuOrd --> ReactQuery
+    MenuOrd --> ChakraUI
+
+    OrderHist --> OrdersAPI
+    OrderHist --> ReactQuery
+
+    StaffDash --> StaffAPI
+    StaffDash --> ReactQuery
+```
+
+---
+
+## 13. 음성 주문 데이터 흐름
+
+```mermaid
+---
+title: 음성 주문 시퀀스 다이어그램
+---
+sequenceDiagram
+    autonumber
+    participant U as 사용자
+    participant V as VoiceOrderModal
+    participant SR as SpeechRecognition
+    participant G as GroqService
+    participant TTS as Web Speech TTS
+    participant C as CartAPI
+    participant B as Backend
+
+    U->>V: 음성 주문 버튼 클릭
+    V->>TTS: 인사말 재생
+    TTS-->>U: "안녕하세요, OOO 고객님..."
+
+    loop 대화 진행
+        U->>SR: 음성 입력
+        SR->>V: transcript 전달
+        V->>G: chatWithAI(messages)
+        G->>G: Groq LLM API 호출
+        G-->>V: AIResponse 반환
+        V->>V: orderState 업데이트
+        V->>TTS: 응답 메시지 재생
+        TTS-->>U: AI 응답 음성
+    end
+
+    U->>SR: "맞아요" (주문 확인)
+    SR->>V: 확인 메시지
+    V->>G: chatWithAI (confirm)
+    G-->>V: action: "confirm"
+    V->>C: addCartItem(orderRequest)
+    C->>B: POST /api/cart/items
+    B-->>C: CartResponse
+    C-->>V: 성공
+    V-->>U: 주문 완료 토스트
+```
+
+---
+
+## 사용법
+
+### Mermaid Live Editor
+1. https://mermaid.live 접속
+2. 위 코드 블록 중 원하는 다이어그램 복사
+3. Editor에 붙여넣기
+4. 실시간 렌더링 확인 및 PNG/SVG 다운로드
+
+### GitHub
+GitHub은 Markdown 파일의 Mermaid 코드 블록을 자동으로 렌더링합니다.
+
+### VS Code
+"Markdown Preview Mermaid Support" 또는 "Mermaid Markdown Syntax Highlighting" 확장 설치 후 미리보기 (Ctrl+Shift+V)
