@@ -13,52 +13,34 @@ The voice recognition feature allows users to:
 
 ---
 
-# Part 1: Sequence Diagrams (User-System Interaction)
+# Part 1: Sequence Diagram (User-System Interaction)
 
-Simple sequence diagrams showing interactions between User and System.
+Simple sequence diagram showing the complete voice order flow between User and System.
 
 ---
 
-## 1-1. Voice Menu Recommendation
+## Voice Order Flow
 
 ```mermaid
 sequenceDiagram
     actor User
     participant System
 
+    Note over User,System: Voice Menu Recommendation
     User->>System: Speak voice command (e.g., "프렌치 디너 주문해줘")
     System->>System: Recognize speech and convert to text
     System->>System: Analyze command with Groq API
     System-->>User: Display recommended menu with details
     User->>System: Confirm menu selection
     System-->>User: Open menu detail modal with serving styles
-```
 
----
-
-## 1-2. Voice Add to Cart
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant System
-
+    Note over User,System: Add to Cart
     User->>System: Select serving style and quantity
     User->>System: Click "Add to Cart" button
     System->>System: Add item to cart
     System-->>User: Display updated cart with new item
-    System-->>User: Show success toast notification
-```
 
----
-
-## 1-3. Voice Checkout
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant System
-
+    Note over User,System: Voice Checkout
     User->>System: Speak checkout command (e.g., "결제해줘")
     System->>System: Recognize speech and convert to text
     System->>System: Analyze command with Groq API
@@ -67,30 +49,6 @@ sequenceDiagram
     User->>System: Confirm checkout
     System->>System: Create order with member grade discount
     System-->>User: Display order confirmation with order ID
-```
-
----
-
-## 1-4. Complete Voice Order Flow
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant System
-
-    Note over User,System: Voice Menu Recommendation
-    User->>System: Speak menu order command
-    System-->>User: Display recommended menu
-
-    Note over User,System: Add to Cart
-    User->>System: Select options and add to cart
-    System-->>User: Update cart display
-
-    Note over User,System: Voice Checkout
-    User->>System: Speak checkout command
-    System-->>User: Open checkout modal
-    User->>System: Confirm order details
-    System-->>User: Display order confirmation
 ```
 
 ---
